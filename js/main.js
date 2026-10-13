@@ -45,6 +45,22 @@ const Game = {
       else { Energy.regen(Date.now()); Net.sync(); UI.renderAll(); }
     });
     window.addEventListener('beforeunload', () => Store.save());
+
+    // Auto-update: GitHub Pages caches files for ~10 min, so check version.txt and offer a reload
+    const vl = document.getElementById('verLabel'); if (vl) vl.textContent = window.APP_VERSION || 'dev';
+    const checkUpdate = async () => {
+      if (!window.APP_VERSION) return;
+      try {
+        const r = await fetch('version.txt?t=' + Date.now(), { cache: 'no-store' });
+        if (!r.ok) return;
+        const live = (await r.text()).trim();
+        if (live && live !== window.APP_VERSION) document.getElementById('updateBar').classList.remove('hidden');
+      } catch (e) { /* offline */ }
+    };
+    document.getElementById('updateBar').addEventListener('click', () => { Store.save(); Net.pushSave(true).catch(() => {}).finally(() => location.reload()); });
+    checkUpdate();
+    setInterval(checkUpdate, 3 * 60 * 1000);
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) checkUpdate(); });
   },
 };
 

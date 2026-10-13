@@ -5,10 +5,13 @@ HTML5 + Tailwind CSS (CDN) + Vanilla JavaScript, backend on **Supabase** (projec
 
 ## Play / deploy
 1. Repo → **Settings → Pages** → Source: *Deploy from a branch* → `main` / `(root)` → Save.
-2. Open `https://adriancu91.github.io/coin-pet-go/`.
+2. Open **`https://adriancu91.github.io/Coin-pet-go/`** (capital **C** — the lowercase path gives 404).
 3. Create an account (nickname + password). Progress is saved in the cloud and on the device.
 
 Without signing in you can still play offline (slots, eggs, island, merges); raids, tombola and friends need an account because they only involve real players.
+
+## Releasing an update
+Run `python3 tools/bump_version.py` before committing. It stamps a new version on every CSS/JS link (phones download fresh files instead of the 10-minute GitHub Pages cache) and the game shows a “🔄 New version available” bar to players who have it open.
 
 ## Files
 | File | What it is |

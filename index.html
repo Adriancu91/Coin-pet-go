@@ -10,7 +10,8 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/style.css?v=20261013223411" />
+  <script>window.APP_VERSION = '20261013223411';</script>
 </head>
 
 <body class="min-h-full">
@@ -44,6 +45,7 @@
     </div>
   </header>
 
+  <button id="updateBar" class="hidden fixed top-0 left-0 right-0 z-[80] bg-emerald-500 text-white font-extrabold text-sm py-2 shadow-lg">🔄 New version available — tap to reload</button>
   <div id="toasts" class="fixed top-24 left-0 right-0 z-[70] flex flex-col items-center gap-2 pointer-events-none px-4"></div>
 
   <main class="relative z-10 max-w-xl mx-auto px-3 pt-3 scroll-area">
@@ -209,6 +211,7 @@
 
       <div class="panel mt-3 p-3 text-center">
         <button id="resetBtn" class="btn bg-red-100 text-red-600 text-sm">Reset game</button>
+        <div class="text-[10px] text-slate-400 mt-2">Version <span id="verLabel"></span></div>
       </div>
     </section>
   </main>
@@ -229,14 +232,14 @@
   </div>
 
   <!-- Game scripts (plain scripts, no build step — works on GitHub Pages) -->
-  <script src="config.js"></script>
-  <script src="js/data.js"></script>
-  <script src="js/sound.js"></script>
-  <script src="js/core.js"></script>
-  <script src="js/island.js"></script>
-  <script src="js/net.js"></script>
-  <script src="js/ui.js"></script>
-  <script src="js/admin.js"></script>
-  <script src="js/main.js"></script>
+  <script src="config.js?v=20261013223411"></script>
+  <script src="js/data.js?v=20261013223411"></script>
+  <script src="js/sound.js?v=20261013223411"></script>
+  <script src="js/core.js?v=20261013223411"></script>
+  <script src="js/island.js?v=20261013223411"></script>
+  <script src="js/net.js?v=20261013223411"></script>
+  <script src="js/ui.js?v=20261013223411"></script>
+  <script src="js/admin.js?v=20261013223411"></script>
+  <script src="js/main.js?v=20261013223411"></script>
 </body>
 </html>
