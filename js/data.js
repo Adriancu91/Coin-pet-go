@@ -13,7 +13,7 @@ const CONFIG = {
   START_GOLD: 1500,
 
   SPIN_COST: 1,                     // energy per spin (× bet) — 1 like Coin Master
-  BETS: [1, 3, 10],
+  BETS: [1, 3, 10, 50],
 
   EGG_PRICE: 500,
   EGG_HATCH_CHANCE: 0.5,            // 50% hatch / 50% empty

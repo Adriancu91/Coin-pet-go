@@ -31,7 +31,7 @@ Without signing in you can still play offline (slots, eggs, island, merges); rai
 | Energy | Cap 2000 · +3 every 60 s (also offline) · friend gifts & Tombola prizes can exceed the cap |
 | Island | 5 buildings × 4★ each, paid with Gold. Fully built → reward + sail to the next island (5 themes, then they repeat II, III…) |
 | Animated pets | Your strongest pet of each species (up to 10) walks around the island; tap one to play |
-| Slots | 1⚡ × bet (x1/x3/x10): Coins, Big Bag, Jackpot, Energy, Free Egg, **Raid** |
+| Slots | 1⚡ × bet (x1/x3/x10/x50): Coins, Big Bag, Jackpot, Energy, Free Egg, **Raid** |
 | Merge | 2 × identical N★ → 1 × (N+1)★ — **only after the full 50-pet set at N★ is complete**. Before that, keep the duplicates |
 | Rewards | New species +10⚡ · full set at tier T = 100 × T ⚡ (and unlocks merging that tier) |
 | Egg gacha | 500 Gold · 50% hatch 1★ / 50% empty · 3 empties in a row → next egg guaranteed |
