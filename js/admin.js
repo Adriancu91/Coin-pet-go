@@ -27,7 +27,7 @@ const Admin = {
         <div class="text-[10px] text-slate-500 text-right">only you see this ·<br>hidden from leaderboard & raids</div>
       </div>
       ${section('🪙 Gold', btn('gold', '+10K', 10000) + btn('gold', '+100K', 100000) + btn('gold', '+1M', 1000000))}
-      ${section('⚡ Energy', btn('energy', '+500', 500) + btn('fill', 'Fill 2000') + btn('energyx', '+5000 (over cap)', 5000))}
+      ${section('⚡ Energy', btn('energy', '+500', 500) + btn('fill', 'Fill to 500') + btn('energyx', '+5000', 5000))}
       ${section(`🐾 Pets — tier ${'★'.repeat(this.tier)}`,
         [1, 2, 3, 4, 5].map(t => btn('tier', '★' + t, t, t === this.tier ? 'bg-violet-600 text-white' : 'bg-violet-100 text-violet-700')).join('') +
         btn('allpets', `All 50 at ${this.tier}★`, '', 'bg-violet-500 text-white') +
@@ -51,7 +51,7 @@ const Admin = {
       case 'gold':    st.gold += n; UI.toast(`🛠️ +${Utils.fmt(n)} Gold`, 'gold'); break;
       case 'energy':  Energy.add(n); UI.toast(`🛠️ +${n}⚡`, 'gold'); break;
       case 'fill':    st.energy = Math.max(st.energy, CONFIG.MAX_ENERGY); UI.toast('🛠️ Energy full', 'gold'); break;
-      case 'energyx': Energy.add(n, true); UI.toast(`🛠️ +${n}⚡ (over cap)`, 'gold'); break;
+      case 'energyx': Energy.add(n); UI.toast(`🛠️ +${n}⚡`, 'gold'); break;
       case 'tier':    this.tier = n; break;
       case 'allpets': CREATURES.forEach(c => Collection.add(c.id, this.tier, 1)); UI.toast(`🛠️ Added all 50 pets at ${this.tier}★`, 'gold'); break;
       case 'dupes':   CREATURES.forEach(c => Collection.add(c.id, this.tier, 2)); UI.toast(`🛠️ Added 2× each pet at ${this.tier}★`, 'gold'); break;

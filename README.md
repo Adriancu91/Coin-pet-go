@@ -29,7 +29,7 @@ Without signing in you can still play offline (slots, eggs, island, merges); rai
 ## Game rules
 | System | Rule |
 |---|---|
-| Energy | Cap 2000 · +3 every 60 s (also offline) · friend gifts & Tombola prizes can exceed the cap |
+| Energy | Passive regen +3 every 60 s up to **500** (also offline) · every other income (spins, achievements, friends, Tombola, refunds) has **no cap** |
 | Island | 5 buildings × 4★ each, paid with Gold. Fully built → reward + sail to the next island (5 themes, then they repeat II, III…) |
 | Animated pets | Your strongest pet of each species (up to 10) walks around the island; tap one to play |
 | Slots | 1⚡ × bet (x1/x3/x10/x50): Coins, Big Bag, Jackpot, Energy, Free Eggs, **Shield**, **Raid** — every reward is multiplied by the bet (x50 → 50 eggs, opened together in one summary) |

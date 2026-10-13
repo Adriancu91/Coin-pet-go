@@ -83,7 +83,7 @@ const UI = {
     const fill = this.el('energyFill');
     fill.style.width = Math.min(100, (st.energy / CONFIG.MAX_ENERGY) * 100) + '%';
     fill.classList.toggle('over', st.energy > CONFIG.MAX_ENERGY);
-    this.el('regenText').textContent = st.energy >= CONFIG.MAX_ENERGY ? 'FULL' : `+${CONFIG.REGEN_AMOUNT} in ${Utils.time(Energy.msToNext(now))}`;
+    this.el('regenText').textContent = st.energy >= CONFIG.MAX_ENERGY ? (st.energy > CONFIG.MAX_ENERGY ? 'BONUS' : 'FULL') : `+${CONFIG.REGEN_AMOUNT} in ${Utils.time(Energy.msToNext(now))}`;
     this.el('netBadge').innerHTML = Net.online
       ? `<span class="online-dot bg-emerald-500"></span> ${Utils.esc(Net.profile?.nickname)}`
       : `<span class="online-dot bg-slate-400"></span> Offline`;

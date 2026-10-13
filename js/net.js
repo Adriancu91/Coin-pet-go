@@ -137,7 +137,7 @@ const Net = {
 
       const gifts = await this.call('claim_gifts');
       for (const g of gifts || []) {
-        Energy.add(g.amount, true); // gifts may exceed the 2000 cap
+        Energy.add(g.amount);
         Sound.play('gift');
         Social.log('💝', `${g.sender_name} sent you ${g.amount}⚡`);
         UI.toast(`💝 ${g.sender_name} sent you ${g.amount}⚡!`, 'pink');

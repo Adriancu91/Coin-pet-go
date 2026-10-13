@@ -6,7 +6,7 @@ const HOUR = 3600 * 1000;
 
 const CONFIG = {
   SAVE_KEY: 'pocketIslandMaster_save_v2',
-  MAX_ENERGY: 2000,                 // cap for passive regeneration
+  MAX_ENERGY: 500,                  // passive regeneration stops here; every other reward has NO cap
   REGEN_AMOUNT: 3,                  // +3 energy ...
   REGEN_INTERVAL_MS: 60 * 1000,     // ... every 60 seconds
   START_ENERGY: 300,

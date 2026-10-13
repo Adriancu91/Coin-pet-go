@@ -65,11 +65,12 @@ const S = () => Store.state;
 
 /* =============================== ENERGY =============================== */
 const Energy = {
-  /** Normal rewards respect the 2000 cap; friend gifts & tombola prizes pass bypassCap=true */
-  add(amount, bypassCap = false) {
-    const st = S();
-    if (bypassCap) st.energy += amount;
-    else st.energy = Math.max(st.energy, Math.min(CONFIG.MAX_ENERGY, st.energy + amount));
+  /**
+   * Rewards (spins, achievements, friends, tombola, refunds...) are NOT capped.
+   * Only passive regeneration stops at MAX_ENERGY (500) — see regen().
+   */
+  add(amount) {
+    S().energy += amount;
   },
   spend(amount) {
     if (S().energy < amount) return false;
@@ -273,13 +274,13 @@ const Raid = {
       total = st.shields + added;
     }
     if (added === null) {          // server unreachable: give the whole bet back as energy
-      Energy.add(bet, true);
+      Energy.add(bet);
       res.textContent = `🛡️ Server busy — +${bet}⚡ refunded`;
       UI.renderTop(); return;
     }
     st.shields = total;
     const refund = bet - added;
-    if (refund > 0) Energy.add(refund, true);
+    if (refund > 0) Energy.add(refund);
     const parts = [];
     if (added) parts.push(`+${added} 🛡️ (${total}/${CONFIG.MAX_SHIELDS})`);
     if (refund) parts.push(`+${refund}⚡ back`);
@@ -492,7 +493,7 @@ const Tombola = {
     if (!Energy.spend(CONFIG.TOMBOLA_TICKET)) { UI.toast('Not enough energy!', 'red'); return; }
     let ok = false;
     try { ok = await Net.buyTicket(); } catch (e) { console.warn(e); }
-    if (!ok) { Energy.add(CONFIG.TOMBOLA_TICKET, true); UI.toast('Could not buy the ticket — energy refunded.', 'red'); UI.renderAll(); return; }
+    if (!ok) { Energy.add(CONFIG.TOMBOLA_TICKET); UI.toast('Could not buy the ticket — energy refunded.', 'red'); UI.renderAll(); return; }
     Social.log('🎟️', `Bought a Tombola ticket (-${CONFIG.TOMBOLA_TICKET}⚡)`);
     UI.toast('🎟️ Ticket bought! Good luck!', 'green');
     Store.save();
@@ -502,7 +503,7 @@ const Tombola = {
 
   applyPayouts(rows) {
     for (const p of rows) {
-      Energy.add(p.amount, true); // prizes may exceed the 2000 cap
+      Energy.add(p.amount);
       if (p.kind === 'win') {
         UI.toast(`🎉 You WON the Tombola! +${p.amount}⚡`, 'gold'); UI.confetti(); Sound.play('jackpot');
         Social.log('🎉', `Won the Tombola: +${p.amount}⚡`);
