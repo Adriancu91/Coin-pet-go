@@ -361,6 +361,33 @@ const UI = {
     }, 1200);
   },
 
+  showEggBatch({ n, hatched, empties, pityHits, free }) {
+    const groups = new Map();
+    hatched.forEach(h => { const g = groups.get(h.id) || { id: h.id, count: 0, isNew: false }; g.count++; g.isNew ||= h.isNew; groups.set(h.id, g); });
+    const list = [...groups.values()].sort((a, b) => (b.isNew - a.isNew) || (b.count - a.count));
+    const newCount = list.filter(g => g.isNew).length;
+    this.showModal(`
+      <div class="text-center">
+        <div class="font-extrabold text-sky-800" id="eggTitle">${free ? '🎁' : '🥚'} Opening ${n} eggs...</div>
+        <div id="eggStage" class="my-3 text-5xl"><span class="egg shake">🥚</span><span class="egg shake" style="animation-delay:.1s">🥚</span><span class="egg shake" style="animation-delay:.2s">🥚</span></div>
+        <div id="eggRes" class="min-h-[40px]"></div>
+        <button class="btn w-full mt-3 bg-sky-600 text-white" data-close>Collect</button>
+      </div>`);
+    setTimeout(() => {
+      const stage = this.el('eggStage'); if (!stage) return;
+      stage.className = 'my-3 grid grid-cols-5 gap-2 max-h-72 overflow-y-auto no-scrollbar pop-in p-1';
+      this.el('eggTitle').textContent = `${free ? '🎁' : '🥚'} ${n} eggs opened!`;
+      stage.innerHTML = list.length
+        ? list.map(g => `<div class="relative">${this.card(g.id, 1, { count: g.count })}${g.isNew ? '<span class="absolute -top-1 -left-1 z-10 text-[9px] font-extrabold bg-emerald-500 text-white rounded-full px-1.5 shadow">NEW</span>' : ''}</div>`).join('')
+        : '<div class="col-span-5 text-6xl">🪺</div>';
+      this.el('eggRes').innerHTML = `
+        <div class="text-xl font-extrabold text-emerald-600">${hatched.length} pet${hatched.length === 1 ? '' : 's'} hatched!</div>
+        <div class="text-sm text-slate-500">${newCount ? `🆕 ${newCount} new species (+${newCount * CONFIG.DISCOVERY_ENERGY}⚡) · ` : ''}${empties} empty${pityHits ? ` · 🌟 ${pityHits} guaranteed by pity` : ''}</div>`;
+      if (hatched.length) this.confetti();
+      this.renderAll();
+    }, 1300);
+  },
+
   /* ---------- Social tab ---------- */
   renderSocial() {
     const st = S(); const now = Date.now();

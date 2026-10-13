@@ -237,7 +237,7 @@ const Slot = {
       case 'bag':     { const g = Utils.randInt(180, 260) * bet; win(g); res.textContent = `💰 Big Bag! +${Utils.fmt(g)} Gold!`; break; }
       case 'jackpot': { const g = 1000 * bet; win(g); res.textContent = `💎 JACKPOT! +${Utils.fmt(g)} Gold!`; UI.confetti(); Social.log('💎', `Jackpot +${Utils.fmt(g)} Gold`); break; }
       case 'energy':  { const e = 3 * bet; Energy.add(e); UI.flashReels(); res.textContent = `⚡ +${e} Energy!`; break; }
-      case 'egg':     { UI.flashReels(); res.textContent = '🥚 Free Egg!'; Shop.openEgg(true); break; }
+      case 'egg':     { UI.flashReels(); res.textContent = bet > 1 ? `🥚 ${bet} Free Eggs!` : '🥚 Free Egg!'; if (bet > 1) Shop.openEggs(bet, true); else Shop.openEgg(true); break; }
       case 'raid':    { UI.flashReels(); res.textContent = '⚔️ RAID TIME!'; await Raid.start(bet); break; }
       case 'shield':  { UI.flashReels(); await Raid.gainShield(bet); break; }
       default:        res.textContent = 'So close... spin again! 🌴';
@@ -384,6 +384,30 @@ const Shop = {
     else st.pity++;
     Store.save();
     UI.showEgg({ hatched, id, guaranteed, free, isNew });
+  },
+
+  /**
+   * Open several eggs at once (slot egg × bet). Same rules per egg: 50% hatch,
+   * pity guarantee after 3 empties in a row. Shows one summary instead of N popups.
+   */
+  openEggs(n, free) {
+    const st = S();
+    const hatched = []; let empties = 0, pityHits = 0;
+    for (let i = 0; i < n; i++) {
+      st.eggsOpened++;
+      const guaranteed = st.pity >= CONFIG.PITY_THRESHOLD;
+      if (guaranteed || Math.random() < CONFIG.EGG_HATCH_CHANCE) {
+        const id = Collection.randomSpecies();
+        const isNew = !st.discovered[id];
+        Collection.add(id, 1);
+        hatched.push({ id, isNew });
+        st.pity = 0;
+        if (guaranteed) pityHits++;
+      } else { st.pity++; empties++; }
+    }
+    Social.log('🐣', `Opened ${n} eggs: ${hatched.length} pets, ${empties} empty`);
+    Store.save();
+    UI.showEggBatch({ n, hatched, empties, pityHits, free });
   },
 
   deals() {
