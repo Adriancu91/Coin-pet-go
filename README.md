@@ -21,6 +21,7 @@ Without signing in you can still play offline (slots, eggs, island, merges); rai
 | `js/island.js` | Coin-Master-style island: buildings + walking animated pets |
 | `js/net.js` | Accounts, cloud save, raids, friends, gifts, tombola |
 | `js/ui.js` / `js/main.js` | Rendering and the game loop |
+| `js/sound.js` | Synthesized sound effects + island music (Web Audio, no files); toggles in Social → Sound |
 | `js/admin.js` | Admin testing panel (Social tab, admin accounts only) |
 | `promo/` | TikTok ad: `ad.html` (animated source), screenshots, rendered `pocket-island-tiktok.mp4` |
 | `supabase.sql` | Full database schema + server rules |
@@ -40,6 +41,7 @@ Without signing in you can still play offline (slots, eggs, island, merges); rai
 | Raids | A random **real player** (bet up to x50 counts): steal 10–30% × bet/2 of their Gold (blocked by a shield) · 5% chance to capture one of their 3 defending pets · above your average tier (or 3★+) → three 1★ copies. The victim sees the raid next time they play |
 | Invite | Real WhatsApp / share link, +50⚡ every 2 h |
 | Friends | Add by nickname · send 10⚡ to each friend every 12 h |
+| Leaderboards | 🏝️ **Builders**: building stars (20 per finished island + current island) · 🐾 **Collectors**: best tier reached per pet (max 250) |
 | Tombola | Every 5 h · ticket 3⚡ · pool ÷ 3 winners × 10 · needs at least 3 real players, otherwise tickets are refunded |
 
 ## Admin

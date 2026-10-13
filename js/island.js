@@ -19,6 +19,8 @@ const Island = {
   cost(b, lvl, n = S().island.level) {
     return Math.round((400 * Math.pow(n, 1.35) * (1 + b * 0.25) * (lvl + 1)) / 10) * 10;
   },
+  /** Building stars for the leaderboard: 20 per completed island + stars on the current one */
+  totalBuildStars() { return (S().island.level - 1) * this.starsTotal() + this.starsBuilt(); },
   starsBuilt() { return S().island.buildings.reduce((s, l) => s + l, 0); },
   starsTotal() { return DATA.ISLANDS[0].buildings.length * CONFIG.BUILDING_MAX; },
   complete() { return S().island.buildings.every(l => l >= CONFIG.BUILDING_MAX); },
@@ -32,6 +34,7 @@ const Island = {
     st.gold -= price;
     st.island.buildings[b] = lvl + 1;
     const [ico, name] = this.theme().buildings[b];
+    Sound.play('build');
     Social.log('🔨', `${lvl === 0 ? 'Built' : 'Upgraded'} ${name} to ${lvl + 1}★ (-${Utils.fmt(price)} Gold)`);
     UI.toast(`${ico} ${name} ${'★'.repeat(lvl + 1)}`, 'gold');
     Store.save();
@@ -49,6 +52,7 @@ const Island = {
     st.island.level++;
     st.island.buildings = [0, 0, 0, 0, 0];
     UI.toast(`⛵ Welcome to ${this.nameFor(st.island.level)}!`, 'green');
+    Sound.play('jackpot');
     UI.confetti();
     Store.save();
     this.renderScene(true);
@@ -193,6 +197,7 @@ const Island = {
 
   /** Tap a pet: it jumps, shows a heart and its name */
   tapPet(id) {
+    Sound.play('pet');
     const w = this.walkers.find(x => x.id === id); if (!w?.el) return;
     w.el.classList.remove('jump'); void w.el.offsetWidth; w.el.classList.add('jump');
     const isle = UI.el('isle');

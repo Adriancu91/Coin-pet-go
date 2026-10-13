@@ -423,3 +423,9 @@ alter table public.players add column if not exists shields int not null default
 alter table public.attacks add column if not exists blocked boolean not null default false;
 --   add_shields(p_token, p_count) → { added, shields } — fills up to 3 (migration "add_shields_by_bet");
 --   the client refunds (p_count - added) as energy
+
+-- ---------- STAR LEADERBOARDS (migration "star_leaderboards") ---------
+-- players.build_stars, players.pet_stars; push_save(..., p_build_stars, p_pet_stars);
+-- leaderboard_stars('build' | 'pets') → top 20 (banned + admin hidden)
+alter table public.players add column if not exists build_stars int not null default 0;
+alter table public.players add column if not exists pet_stars int not null default 0;

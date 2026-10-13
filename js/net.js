@@ -17,6 +17,7 @@ const Net = {
   tombola: null,
   friends: [],
   leaders: [],
+  leaderKind: 'build',     // 'build' = building stars, 'pets' = collection stars
 
   available() { return !!(window.supabase && window.PIM_CONFIG?.SUPABASE_URL && window.PIM_CONFIG?.SUPABASE_KEY); },
   validNick(n) { return /^[A-Za-z0-9_]{3,16}$/.test(n || ''); },
@@ -118,6 +119,8 @@ const Net = {
         p_gold: Math.max(0, Math.floor(st.gold)),
         p_island: st.island.level,
         p_pets: Collection.activePets(3),
+        p_build_stars: Island.totalBuildStars(),
+        p_pet_stars: Collection.petStars(),
       });
     } catch (e) { this.dirty = true; throw e; }
   },
@@ -135,6 +138,7 @@ const Net = {
       const gifts = await this.call('claim_gifts');
       for (const g of gifts || []) {
         Energy.add(g.amount, true); // gifts may exceed the 2000 cap
+        Sound.play('gift');
         Social.log('💝', `${g.sender_name} sent you ${g.amount}⚡`);
         UI.toast(`💝 ${g.sender_name} sent you ${g.amount}⚡!`, 'pink');
       }
@@ -170,7 +174,7 @@ const Net = {
   async refreshSocial() {
     if (!this.online) return;
     try {
-      const [f, l] = await Promise.all([this.call('my_friends'), this.rpc('leaderboard')]);
+      const [f, l] = await Promise.all([this.call('my_friends'), this.rpc('leaderboard_stars', { p_kind: this.leaderKind })]);
       this.friends = f || [];
       this.leaders = l || [];
     } catch (e) { console.warn(e); }

@@ -14,6 +14,7 @@ const UI = {
     const t = document.createElement('div');
     t.className = `toast ${colors[color] || colors.blue} text-white font-bold text-sm px-4 py-2 rounded-2xl shadow-lg max-w-sm text-center`;
     t.textContent = msg;
+    if (color === 'red') Sound.play('error');
     const box = this.el('toasts');
     box.appendChild(t);
     while (box.children.length > 4) box.firstChild.remove();
@@ -116,11 +117,14 @@ const UI = {
     const timer = setInterval(() => reels.forEach(r => {
       if (r.classList.contains('spinning')) r.querySelector('.sym').textContent = Utils.pick(DATA.SLOT_SYMBOLS);
     }), 70);
+    const ticker = setInterval(() => Sound.play('tick'), 110);
     for (let i = 0; i < reels.length; i++) {
       await Utils.sleep(i === 0 ? 650 : 330);
       reels[i].classList.remove('spinning');
       reels[i].querySelector('.sym').textContent = finalSyms[i];
       void reels[i].offsetWidth; reels[i].classList.add('stop');
+      Sound.play('reelStop');
+      if (i === reels.length - 1) clearInterval(ticker);
     }
     clearInterval(timer);
     await Utils.sleep(250);
@@ -142,6 +146,7 @@ const UI = {
     setTimeout(() => {
       const anim = this.el('raidAnim'); if (!anim) return;
       anim.classList.remove('shake'); anim.textContent = '💰'; anim.classList.add('pop-in');
+      Sound.play(capture ? 'jackpot' : 'steal');
       let capHtml = '<div class="text-slate-500 text-sm mt-1">No creature captured this time (5% chance).</div>';
       if (capture) {
         const c = CREATURES[capture.id];
@@ -331,6 +336,7 @@ const UI = {
   },
 
   showEgg({ hatched, id, guaranteed, free, isNew }) {
+    Sound.play('crack');
     this.showModal(`
       <div class="text-center">
         <div class="font-extrabold text-sky-800">${free ? '🎁 Free Egg from the Slots!' : '🥚 Opening Egg...'}</div>
@@ -346,12 +352,14 @@ const UI = {
       if (hatched) {
         Collection.add(id, 1);
         Social.log('🐣', `Hatched ${CREATURES[id].name} 1★${guaranteed ? ' (pity)' : ''}`);
+        Sound.play('hatch');
         stage.innerHTML = `<div class="w-28 mx-auto pop-in">${this.card(id, 1)}</div>`;
         this.el('eggRes').innerHTML = `<div class="text-xl font-extrabold text-emerald-600">${CREATURES[id].name} hatched!</div>
           ${isNew ? `<div class="text-sm text-emerald-700">🆕 New species · +${CONFIG.DISCOVERY_ENERGY}⚡ — it moves onto your island!</div>` : '<div class="text-sm text-slate-500">Duplicate — keep it for merging after the set is complete!</div>'}`;
         this.confetti();
       } else {
         Social.log('🥚', 'Egg was empty');
+        Sound.play('empty');
         stage.innerHTML = `<span class="egg pop-in">🪺</span>`;
         this.el('eggRes').innerHTML = `<div class="text-xl font-extrabold text-rose-500">Empty egg...</div>
           <div class="text-sm text-slate-500">${S().pity >= CONFIG.PITY_THRESHOLD ? '🌟 Your NEXT egg is guaranteed!' : `Pity ${S().pity}/${CONFIG.PITY_THRESHOLD}`}</div>`;
@@ -362,6 +370,7 @@ const UI = {
   },
 
   showEggBatch({ n, hatched, empties, pityHits, free }) {
+    Sound.play('crack');
     const groups = new Map();
     hatched.forEach(h => { const g = groups.get(h.id) || { id: h.id, count: 0, isNew: false }; g.count++; g.isNew ||= h.isNew; groups.set(h.id, g); });
     const list = [...groups.values()].sort((a, b) => (b.isNew - a.isNew) || (b.count - a.count));
@@ -375,6 +384,7 @@ const UI = {
       </div>`);
     setTimeout(() => {
       const stage = this.el('eggStage'); if (!stage) return;
+      Sound.play(hatched.length ? 'hatch' : 'empty');
       stage.className = 'my-3 grid grid-cols-5 gap-2 max-h-72 overflow-y-auto no-scrollbar pop-in p-1';
       this.el('eggTitle').textContent = `${free ? '🎁' : '🥚'} ${n} eggs opened!`;
       stage.innerHTML = list.length
@@ -448,10 +458,18 @@ const UI = {
 
     // Leaderboard
     this.el('leaderBox').classList.toggle('hidden', !Net.online);
-    this.el('leaderList').innerHTML = Net.leaders.map((p, i) =>
+    const kind = Net.leaderKind;
+    this.el('leaderTabs').innerHTML = [['build', '🏝️ Builders'], ['pets', '🐾 Collectors']].map(([k, l]) =>
+      `<button class="flex-1 text-sm font-extrabold rounded-xl py-1.5 ${kind === k ? 'bg-sky-600 text-white' : 'bg-sky-50 text-slate-600'}" data-leader="${k}">${l}</button>`).join('');
+    this.el('leaderMine').innerHTML = kind === 'build'
+      ? `Your building stars: <b class="text-amber-600">⭐ ${Island.totalBuildStars()}</b> · 20 per finished island`
+      : `Your collection stars: <b class="text-violet-600">⭐ ${Collection.petStars()}</b> / 250 · best tier of each pet`;
+    this.el('leaderList').innerHTML = Net.leaders.length ? Net.leaders.map((p, i) =>
       `<div class="flex items-center gap-2 text-sm ${p.nickname === Net.profile?.nickname ? 'bg-amber-100' : 'bg-sky-50'} rounded-xl px-2 py-1">
         <b class="w-6 text-center">${['🥇', '🥈', '🥉'][i] || i + 1}</b><span class="flex-1 truncate font-bold">${Utils.esc(p.nickname)}</span>
-        <span class="text-xs text-slate-500">🏝️ ${p.island_level}</span><span class="text-xs text-amber-600 w-16 text-right">🪙 ${Utils.fmt(p.gold)}</span></div>`).join('');
+        <span class="text-xs text-slate-500">🏝️ ${p.island_level}</span>
+        <span class="text-xs font-extrabold w-16 text-right ${kind === 'build' ? 'text-amber-600' : 'text-violet-600'}">⭐ ${kind === 'build' ? p.build_stars : p.pet_stars}</span></div>`).join('')
+      : '<div class="text-sm text-slate-400">No players yet — be the first!</div>';
 
     this.el('activityLog').innerHTML = st.log.length
       ? st.log.map(l => `<div class="flex gap-2"><span class="text-slate-400 text-xs w-11 shrink-0 pt-0.5">${Utils.clock(l.t)}</span><span>${l.icon} ${Utils.esc(l.text)}</span></div>`).join('')
@@ -498,6 +516,12 @@ const UI = {
     }
   },
 
+  renderSoundUI() {
+    const box = this.el('soundBox'); if (!box) return;
+    const sw = (id, on, label) => `<button id="${id}" class="flex-1 btn text-sm ${on ? 'bg-emerald-500 text-white' : 'bg-slate-200 text-slate-500'}">${label}: ${on ? 'ON' : 'OFF'}</button>`;
+    box.innerHTML = sw('sfxToggle', Sound.sfxOn, '🔔 Effects') + sw('musicToggle', Sound.musicOn, '🎵 Music');
+  },
+
   /* ---------- Render orchestration ---------- */
   tickVisible() {
     if (this.activeTab === 'social') this.renderSocial();
@@ -506,6 +530,7 @@ const UI = {
 
   renderAll() {
     this.renderTop();
+    this.renderSoundUI();
     if (this.activeTab === 'slot') this.renderSlot();
     if (this.activeTab === 'island') { Island.renderScene(); this.renderIslandPanel(); }
     if (this.activeTab === 'pets') this.renderPets();
@@ -514,6 +539,9 @@ const UI = {
   },
 
   bind() {
+    const unlock = () => { Sound.unlock(); window.removeEventListener('pointerdown', unlock); };
+    window.addEventListener('pointerdown', unlock);
+    document.addEventListener('click', e => { if (e.target.closest('.btn,.tab-btn')) Sound.play('tap'); }, true);
     document.querySelectorAll('.tab-btn').forEach(b => b.addEventListener('click', () => this.switchTab(b.dataset.target)));
     this.el('topSocialBtn').addEventListener('click', () => this.switchTab('social'));
     this.el('netBadge').addEventListener('click', () => { if (!Net.online) this.showAuth(); else this.switchTab('social'); });
@@ -523,6 +551,7 @@ const UI = {
     this.el('travelBtn').addEventListener('click', () => this.showIslandComplete());
     this.el('autoMergeBtn').addEventListener('click', () => {
       const n = Collection.autoMergeAll();
+      if (n) Sound.play('merge');
       if (n) { this.toast(`✨ Performed ${n} merge${n > 1 ? 's' : ''}!`, 'gold'); Social.log('✨', `Auto-merged ${n} time(s)`); Store.save(); }
       else this.toast('Nothing to merge yet — complete the set first!', 'blue');
       this.selectedStack = null; this.renderAll();
@@ -547,14 +576,18 @@ const UI = {
     document.body.addEventListener('keydown', e => { if (e.key === 'Enter' && this.el('authSubmit')) this.submitAuth(this.el('authSubmit').dataset.mode); });
 
     document.body.addEventListener('click', async e => {
-      const t = e.target.closest('[data-petfilter],[data-mergeall],[data-admin],[data-bet],[data-dex],[data-deal],[data-gift],[data-dexmerge],[data-upgrade],[data-bld],[data-walker],[data-close],#eggAgain,#travelNow,#authSubmit,#authSwitch,#openAuthBtn,#logoutBtn');
+      const t = e.target.closest('#sfxToggle,#musicToggle,[data-leader],[data-petfilter],[data-mergeall],[data-admin],[data-bet],[data-dex],[data-deal],[data-gift],[data-dexmerge],[data-upgrade],[data-bld],[data-walker],[data-close],#eggAgain,#travelNow,#authSubmit,#authSwitch,#openAuthBtn,#logoutBtn');
       if (!t) { if (e.target.id === 'modal' && !this.el('modal').dataset.locked) this.closeModal(); return; }
       if (t.disabled) return;
       if (t.dataset.admin) return Admin.run(t.dataset.admin, t.dataset.arg);
+      if (t.id === 'sfxToggle') { Sound.toggleSfx(); return this.renderSoundUI(); }
+      if (t.id === 'musicToggle') { Sound.toggleMusic(); return this.renderSoundUI(); }
+      if (t.dataset.leader) { Net.leaderKind = t.dataset.leader; this.renderSocial(); await Net.refreshSocial(); return this.renderSocial(); }
       if (t.dataset.petfilter) { this.petFilter = t.dataset.petfilter; return this.renderPets(); }
       if (t.dataset.mergeall) {
         const id = +t.dataset.mergeall; let n = 0;
         for (let k = 1; k < CONFIG.MAX_STARS; k++) while (Collection.count(id, k) >= 2 && Collection.merge(id, k, true)) n++;
+        if (n) Sound.play('merge');
         if (n) { this.toast(`✨ ${CREATURES[id].name}: ${n} merge${n > 1 ? 's' : ''}!`, 'gold'); Social.log('✨', `Merged ${CREATURES[id].name} ×${n}`); Store.save(); }
         this.showDex(id); this.renderAll(); return;
       }
@@ -577,7 +610,7 @@ const UI = {
       }
       if (t.dataset.dexmerge) {
         const [id, stars] = t.dataset.dexmerge.split(':').map(Number);
-        if (Collection.merge(id, stars)) { this.toast(`✨ ${CREATURES[id].name} → ${stars + 1}★!`, 'gold'); Social.log('✨', `Merged 2× ${CREATURES[id].name} ${stars}★ → ${stars + 1}★`); Store.save(); this.showDex(id); this.renderAll(); }
+        if (Collection.merge(id, stars)) { Sound.play('merge'); this.toast(`✨ ${CREATURES[id].name} → ${stars + 1}★!`, 'gold'); Social.log('✨', `Merged 2× ${CREATURES[id].name} ${stars}★ → ${stars + 1}★`); Store.save(); this.showDex(id); this.renderAll(); }
         return;
       }
       if (t.id === 'eggAgain') { this.closeModal(); return Shop.buyEgg(); }

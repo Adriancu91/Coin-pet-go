@@ -191,13 +191,20 @@
       </div>
 
       <div id="leaderBox" class="panel mt-3 p-3">
-        <div class="font-extrabold text-sky-800 mb-1">🏆 Top Island Masters</div>
+        <div class="font-extrabold text-sky-800 mb-2">🏆 Top Island Masters</div>
+        <div id="leaderTabs" class="flex gap-2 mb-2"></div>
+        <div id="leaderMine" class="text-xs text-slate-500 mb-2"></div>
         <div id="leaderList" class="space-y-1"></div>
       </div>
 
       <div class="panel mt-3 p-3">
         <div class="font-extrabold text-sky-800 mb-1">📜 Activity Log</div>
         <div id="activityLog" class="space-y-1 text-sm max-h-72 overflow-y-auto no-scrollbar"></div>
+      </div>
+
+      <div class="panel mt-3 p-3">
+        <div class="font-extrabold text-sky-800 mb-2">⚙️ Sound</div>
+        <div id="soundBox" class="flex gap-2"></div>
       </div>
 
       <div class="panel mt-3 p-3 text-center">
@@ -224,6 +231,7 @@
   <!-- Game scripts (plain scripts, no build step — works on GitHub Pages) -->
   <script src="config.js"></script>
   <script src="js/data.js"></script>
+  <script src="js/sound.js"></script>
   <script src="js/core.js"></script>
   <script src="js/island.js"></script>
   <script src="js/net.js"></script>

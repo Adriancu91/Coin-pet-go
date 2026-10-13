@@ -148,6 +148,9 @@ const Collection = {
     this.checkSets();
   },
 
+  /** Collection stars for the leaderboard: highest tier ever reached per species (max 50 × 5 = 250) */
+  petStars() { return CREATURES.reduce((s, c) => s + (S().maxStar[c.id] || 0), 0); },
+
   /** Species that reached at least tier t */
   setProgress(t) { return CREATURES.filter(c => (S().maxStar[c.id] || 0) >= t).length; },
 
@@ -161,7 +164,7 @@ const Collection = {
         Energy.add(reward);
         UI.toast(`🏆 FULL ${t}★ SET COMPLETE! +${reward}⚡`, 'gold');
         if (t < CONFIG.MAX_STARS) UI.toast(`🔓 ${t}★ → ${t + 1}★ merging unlocked! Use your duplicates.`, 'pink');
-        UI.confetti();
+        UI.confetti(); Sound.play('jackpot');
         Social.log('🏆', `Completed all 50 at ${t}★ (+${reward}⚡) — ${t}★ merges unlocked`);
       }
     }
@@ -233,10 +236,10 @@ const Slot = {
     const res = UI.el('slotResult');
     const win = g => { S().gold += g; UI.flashReels(); };
     switch (outcome.id) {
-      case 'coins':   { const g = Utils.randInt(50, 90) * bet; win(g); res.textContent = `🪙 +${Utils.fmt(g)} Gold!`; break; }
-      case 'bag':     { const g = Utils.randInt(180, 260) * bet; win(g); res.textContent = `💰 Big Bag! +${Utils.fmt(g)} Gold!`; break; }
-      case 'jackpot': { const g = 1000 * bet; win(g); res.textContent = `💎 JACKPOT! +${Utils.fmt(g)} Gold!`; UI.confetti(); Social.log('💎', `Jackpot +${Utils.fmt(g)} Gold`); break; }
-      case 'energy':  { const e = 3 * bet; Energy.add(e); UI.flashReels(); res.textContent = `⚡ +${e} Energy!`; break; }
+      case 'coins':   { const g = Utils.randInt(50, 90) * bet; win(g); Sound.play('coin'); res.textContent = `🪙 +${Utils.fmt(g)} Gold!`; break; }
+      case 'bag':     { const g = Utils.randInt(180, 260) * bet; win(g); Sound.play('bigwin'); res.textContent = `💰 Big Bag! +${Utils.fmt(g)} Gold!`; break; }
+      case 'jackpot': { const g = 1000 * bet; win(g); res.textContent = `💎 JACKPOT! +${Utils.fmt(g)} Gold!`; UI.confetti(); Sound.play('jackpot'); Social.log('💎', `Jackpot +${Utils.fmt(g)} Gold`); break; }
+      case 'energy':  { const e = 3 * bet; Energy.add(e); UI.flashReels(); Sound.play('energy'); res.textContent = `⚡ +${e} Energy!`; break; }
       case 'egg':     { UI.flashReels(); res.textContent = bet > 1 ? `🥚 ${bet} Free Eggs!` : '🥚 Free Egg!'; if (bet > 1) Shop.openEggs(bet, true); else Shop.openEgg(true); break; }
       case 'raid':    { UI.flashReels(); res.textContent = '⚔️ RAID TIME!'; await Raid.start(bet); break; }
       case 'shield':  { UI.flashReels(); await Raid.gainShield(bet); break; }
@@ -281,6 +284,7 @@ const Raid = {
     if (added) parts.push(`+${added} 🛡️ (${total}/${CONFIG.MAX_SHIELDS})`);
     if (refund) parts.push(`+${refund}⚡ back`);
     res.textContent = `🛡️ ${parts.join(' · ')}`;
+    Sound.play(added ? 'shield' : 'energy');
     if (added) UI.toast(`🛡️ +${added} shield${added > 1 ? 's' : ''} — ${total}/${CONFIG.MAX_SHIELDS}${refund ? ` · ${refund}⚡ returned` : ''}`, 'blue');
     else UI.toast(`🛡️ Shields already full — ${refund}⚡ returned`, 'blue');
     Social.log('🛡️', `Shield spin x${bet}: +${added} shields, +${refund}⚡ back`);
@@ -312,6 +316,7 @@ const Raid = {
       this.record({ dir: 'out', name: `${res.nickname}'s ${isle0}`, stolen: g, capText: '🛡️ blocked' });
       Social.log('🛡️', `${res.nickname}'s shield blocked your raid (+${g} Gold consolation)`);
       UI.showRaidBlocked(res.nickname, isle0, res.shields_left || 0, g);
+      Sound.play('raid'); setTimeout(() => Sound.play('blocked'), 350);
       UI.renderTop(); UI.renderRaidLog(); Store.save();
       return;
     }
@@ -340,6 +345,7 @@ const Raid = {
     Social.log('⚔️', `Raided ${name}: +${Utils.fmt(stolen)} Gold${capText ? ' · ' + capText : ''}`);
 
     UI.showRaid({ owner: res.nickname, island: isle, gold: res.gold, pets }, stolen, capture);
+    Sound.play('raid');
     UI.renderTop(); UI.renderRaidLog();
     Store.save();
   },
@@ -349,11 +355,13 @@ const Raid = {
     const st = S();
     for (const r of rows) {
       if (r.blocked) {
+        Sound.play('shield');
         this.record({ dir: 'in', name: r.attacker_name, stolen: 0, capText: 'blocked' });
         Social.log('🛡️', `${r.attacker_name} attacked you — your shield blocked it!`);
         UI.toast(`🛡️ ${r.attacker_name} attacked — your shield blocked it!`, 'blue');
         continue;
       }
+      Sound.play('raid');
       const loss = Math.min(st.gold, Math.max(0, Number(r.stolen) || 0));
       st.gold -= loss;
       this.record({ dir: 'in', name: r.attacker_name, stolen: loss, capText: '' });
@@ -430,6 +438,7 @@ const Shop = {
     st.gold -= item.price;
     d.bought.push(idx);
     Collection.add(item.id, 1);
+    Sound.play('coin');
     UI.toast(`Bought ${CREATURES[item.id].emoji} ${CREATURES[item.id].name} 1★!`, 'green');
     Social.log('🛒', `Bought deal: ${CREATURES[item.id].name} for ${Utils.fmt(item.price)} Gold`);
     Store.save(); UI.renderAll();
@@ -495,7 +504,7 @@ const Tombola = {
     for (const p of rows) {
       Energy.add(p.amount, true); // prizes may exceed the 2000 cap
       if (p.kind === 'win') {
-        UI.toast(`🎉 You WON the Tombola! +${p.amount}⚡`, 'gold'); UI.confetti();
+        UI.toast(`🎉 You WON the Tombola! +${p.amount}⚡`, 'gold'); UI.confetti(); Sound.play('jackpot');
         Social.log('🎉', `Won the Tombola: +${p.amount}⚡`);
       } else {
         UI.toast(`🎟️ Tombola needed ${CONFIG.TOMBOLA_MIN_PLAYERS}+ players — ticket refunded (+${p.amount}⚡)`, 'blue');
