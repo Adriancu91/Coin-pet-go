@@ -162,7 +162,7 @@ const Net = {
   /* ---------- game calls ---------- */
   raid(bet) { return this.call('raid', { p_bet: bet }); },
   buyTicket() { return this.call('buy_ticket'); },
-  addShield() { return this.call('add_shield'); },
+  addShields(n) { return this.call('add_shields', { p_count: n }); },
   async refreshTombola() { this.tombola = await this.call('tombola_status'); },
   addFriend(nick) { return this.call('add_friend', { p_nick: nick }); },
   sendGift(id) { return this.call('send_gift', { p_to: id }); },

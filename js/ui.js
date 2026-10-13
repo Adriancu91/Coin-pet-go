@@ -44,7 +44,7 @@ const UI = {
   closeModal() { const m = this.el('modal'); m.classList.add('hidden'); m.classList.remove('flex'); },
 
   /* ---------- Creature card (tier visuals) ---------- */
-  card(id, stars, { count = 0, locked = false, faded = false, selected = false, attrs = '' } = {}) {
+  card(id, stars, { count = 0, locked = false, faded = false, selected = false, mergeReady = false, attrs = '' } = {}) {
     const c = CREATURES[id]; const el = DATA.ELEMENTS[c.element];
     const tier = Math.max(1, stars);
     const particles = tier >= 5
@@ -57,7 +57,7 @@ const UI = {
         <div class="emo">${locked ? '❔' : c.emoji}</div>
         <div class="nm">${locked ? '???' : c.name}</div>
         <div class="stars">${locked || !stars ? '&nbsp;' : '★'.repeat(stars)}</div>
-      </div></div>`;
+      </div>${mergeReady ? '<div class="mrg">⬆</div>' : ''}</div>`;
   },
 
   /* ---------- Tabs ---------- */
@@ -75,6 +75,7 @@ const UI = {
   renderTop() {
     const st = S(); const now = Date.now();
     this.el('goldText').textContent = Utils.fmt(st.gold);
+    if (this.activeTab === 'island') Island.refreshAffordable();
     this.el('shieldBox').innerHTML = Array.from({ length: CONFIG.MAX_SHIELDS }, (_, i) =>
       `<span class="${i < (st.shields || 0) ? '' : 'opacity-25 grayscale'}">🛡️</span>`).join('');
     this.el('energyText').textContent = `${Utils.fmt(st.energy)} / ${Utils.fmt(CONFIG.MAX_ENERGY)}`;
@@ -243,23 +244,21 @@ const UI = {
       ? `🔒 <b>${nextT}★ → ${nextT + 1}★ merging is locked</b> until you collect the full ${nextT}★ set (${Collection.setProgress(nextT)}/50). Keep every duplicate — you'll merge them after!`
       : '🔓 All merge tiers unlocked — you are a true Island Master!';
 
-    const stacks = Collection.stacks();
-    if (this.selectedStack && !st.inventory[this.selectedStack]) this.selectedStack = null;
-    this.el('bagEmpty').classList.toggle('hidden', stacks.length > 0);
-    this.el('bagGrid').innerHTML = stacks.map(s => {
-      const k = Collection.key(s.id, s.stars);
-      return this.card(s.id, s.stars, { count: s.count, selected: this.selectedStack === k, attrs: `data-stack="${k}"` });
-    }).join('');
-    const mergeable = stacks.filter(s => s.count >= 2 && s.stars < 5 && Collection.mergeUnlocked(s.stars)).length;
-    this.el('autoMergeBtn').disabled = mergeable === 0;
-    this.el('mergeHint').innerHTML = this.selectedStack
-      ? (() => { const [id, t] = this.selectedStack.split(':').map(Number); const c = CREATURES[id];
-          return Collection.mergeUnlocked(t)
-            ? `Selected <b>${c.name} ${t}★</b>. Tap it again to merge → <b>${c.name} ${t + 1}★</b>.`
-            : `Selected <b>${c.name} ${t}★</b> — 🔒 finish the ${t}★ set first (${Collection.setProgress(t)}/50).`; })()
-      : `Tap a stack, then tap it again to merge 2 identical copies. ${mergeable ? `<b class="text-violet-600">${mergeable} stack(s) ready!</b>` : ''}`;
+    // Merge summary — one line instead of a screen full of duplicates
+    const ready = CREATURES.filter(c => this.canMergeSpecies(c.id));
+    const dupes = Collection.stacks().reduce((n, s) => n + Math.max(0, s.count - 1), 0);
+    this.el('autoMergeBtn').disabled = ready.length === 0;
+    this.el('mergeHint').innerHTML = ready.length
+      ? `<b class="text-violet-600">${ready.length} pet${ready.length > 1 ? 's' : ''} ready to merge</b> — tap “Auto-Merge All” or a pet marked <span class="mrg-inline">⬆</span>`
+      : `${dupes} duplicate${dupes === 1 ? '' : 's'} saved for later. Tap any pet to see all its tiers.`;
 
-    this.el('habitats').innerHTML = Object.entries(DATA.ELEMENTS).map(([elName, el]) => {
+    // Element filter chips
+    const f = this.petFilter || 'all';
+    this.el('petFilter').innerHTML = [['all', '🌈 All'], ...Object.entries(DATA.ELEMENTS).map(([k, e]) => [k, `${e.icon} ${k}`])]
+      .map(([k, label]) => `<button class="text-xs font-extrabold rounded-full px-3 py-1 whitespace-nowrap ${f === k ? 'bg-sky-600 text-white' : 'bg-white text-slate-600 shadow-sm'}" data-petfilter="${k}">${label}</button>`).join('');
+
+    // One compact card per species (best tier shown, total count, merge badge)
+    this.el('habitats').innerHTML = Object.entries(DATA.ELEMENTS).filter(([k]) => f === 'all' || f === k).map(([elName, el]) => {
       const list = CREATURES.filter(c => c.element === elName);
       const found = list.filter(c => st.discovered[c.id]).length;
       return `<div class="panel p-3">
@@ -269,27 +268,17 @@ const UI = {
         </div>
         <div class="grid grid-cols-5 gap-2">${list.map(c => {
           const best = Collection.bestOwned(c.id); const disc = !!st.discovered[c.id];
-          return this.card(c.id, best || st.maxStar[c.id] || 1, { locked: !disc, faded: disc && !best, count: Collection.totalOf(c.id), attrs: `data-dex="${c.id}"` });
+          return this.card(c.id, best || st.maxStar[c.id] || 1, {
+            locked: !disc, faded: disc && !best, count: Collection.totalOf(c.id),
+            mergeReady: this.canMergeSpecies(c.id), attrs: `data-dex="${c.id}"` });
         }).join('')}</div></div>`;
     }).join('');
   },
 
-  onStackTap(k) {
-    if (this.selectedStack === k) {
-      const [id, stars] = k.split(':').map(Number);
-      if (Collection.merge(id, stars)) {
-        const c = CREATURES[id];
-        this.toast(`✨ Merged! ${c.emoji} ${c.name} is now ${stars + 1}★`, 'gold');
-        Social.log('✨', `Merged 2× ${c.name} ${stars}★ → ${stars + 1}★`);
-        this.selectedStack = S().inventory[k] >= 2 ? k : null;
-        Store.save();
-        this.renderPets(); this.renderTop();
-        document.querySelector(`[data-stack="${id}:${stars + 1}"]`)?.classList.add('merge-flash');
-      }
-    } else {
-      this.selectedStack = k;
-      this.renderPets();
-    }
+  /** True when this species has 2+ copies of a tier whose merging is unlocked */
+  canMergeSpecies(id) {
+    for (let t = 1; t < CONFIG.MAX_STARS; t++) if (Collection.mergeUnlocked(t) && Collection.count(id, t) >= 2) return true;
+    return false;
   },
 
   showDex(id) {
@@ -298,9 +287,9 @@ const UI = {
     const rows = [1, 2, 3, 4, 5].map(t => {
       const n = Collection.count(id, t);
       const unlocked = Collection.mergeUnlocked(t);
-      return `<div class="flex items-center gap-2 bg-sky-50 rounded-2xl p-2">
-        <div class="w-16 shrink-0">${this.card(id, t, { faded: !n })}</div>
-        <div class="flex-1"><div class="font-extrabold">${t}★ · owned ${n}</div>
+      return `<div class="flex items-center gap-2 bg-sky-50 rounded-2xl p-1.5 ${n ? '' : 'opacity-60'}">
+        <div class="w-12 shrink-0">${this.card(id, t, { faded: !n })}</div>
+        <div class="flex-1"><div class="font-extrabold text-sm">${t}★ · owned ${n}</div>
           <div class="text-[11px] text-slate-500">${DATA.TIER_NAMES[t - 1]}</div></div>
         ${t < 5 ? `<button class="btn text-xs ${unlocked ? 'bg-violet-500 text-white' : 'bg-slate-200 text-slate-500'}" data-dexmerge="${id}:${t}" ${n < 2 || !unlocked ? 'disabled' : ''}>${unlocked ? `Merge 2→${t + 1}★` : `🔒 ${t}★ set`}</button>` : ''}
       </div>`;
@@ -310,8 +299,11 @@ const UI = {
         <div class="text-xl font-extrabold">${c.emoji} ${c.name}</div>
         <div class="text-sm font-bold">${DATA.ELEMENTS[c.element].icon} ${c.element}</div>
       </div>
-      <div class="space-y-2">${rows}</div>
-      <button class="btn w-full mt-3 bg-slate-200 text-slate-700" data-close>Close</button>`);
+      <div class="space-y-1.5">${rows}</div>
+      <div class="flex gap-2 mt-3">
+        <button class="btn flex-1 bg-slate-200 text-slate-700" data-close>Close</button>
+        ${this.canMergeSpecies(id) ? `<button class="btn flex-1 bg-violet-500 text-white" data-mergeall="${id}">✨ Merge all</button>` : ''}
+      </div>`);
   },
 
   /* ---------- Shop tab ---------- */
@@ -502,7 +494,6 @@ const UI = {
     this.el('buyEggBtn').addEventListener('click', () => Shop.buyEgg());
     this.el('tombolaBtn').addEventListener('click', () => Tombola.buyTicket());
     this.el('travelBtn').addEventListener('click', () => this.showIslandComplete());
-    this.el('clearSelBtn').addEventListener('click', () => { this.selectedStack = null; this.renderPets(); });
     this.el('autoMergeBtn').addEventListener('click', () => {
       const n = Collection.autoMergeAll();
       if (n) { this.toast(`✨ Performed ${n} merge${n > 1 ? 's' : ''}!`, 'gold'); Social.log('✨', `Auto-merged ${n} time(s)`); Store.save(); }
@@ -529,13 +520,19 @@ const UI = {
     document.body.addEventListener('keydown', e => { if (e.key === 'Enter' && this.el('authSubmit')) this.submitAuth(this.el('authSubmit').dataset.mode); });
 
     document.body.addEventListener('click', async e => {
-      const t = e.target.closest('[data-admin],[data-bet],[data-stack],[data-dex],[data-deal],[data-gift],[data-dexmerge],[data-upgrade],[data-bld],[data-walker],[data-close],#eggAgain,#travelNow,#authSubmit,#authSwitch,#openAuthBtn,#logoutBtn');
+      const t = e.target.closest('[data-petfilter],[data-mergeall],[data-admin],[data-bet],[data-dex],[data-deal],[data-gift],[data-dexmerge],[data-upgrade],[data-bld],[data-walker],[data-close],#eggAgain,#travelNow,#authSubmit,#authSwitch,#openAuthBtn,#logoutBtn');
       if (!t) { if (e.target.id === 'modal' && !this.el('modal').dataset.locked) this.closeModal(); return; }
       if (t.disabled) return;
       if (t.dataset.admin) return Admin.run(t.dataset.admin, t.dataset.arg);
+      if (t.dataset.petfilter) { this.petFilter = t.dataset.petfilter; return this.renderPets(); }
+      if (t.dataset.mergeall) {
+        const id = +t.dataset.mergeall; let n = 0;
+        for (let k = 1; k < CONFIG.MAX_STARS; k++) while (Collection.count(id, k) >= 2 && Collection.merge(id, k, true)) n++;
+        if (n) { this.toast(`✨ ${CREATURES[id].name}: ${n} merge${n > 1 ? 's' : ''}!`, 'gold'); Social.log('✨', `Merged ${CREATURES[id].name} ×${n}`); Store.save(); }
+        this.showDex(id); this.renderAll(); return;
+      }
       if (t.dataset.bet) { if (!Slot.spinning) { S().bet = +t.dataset.bet; Store.save(); this.renderSlot(); } return; }
       if (t.dataset.upgrade) { if (t.dataset.close !== undefined) this.closeModal(); Island.upgrade(+t.dataset.upgrade); return; }
-      if (t.dataset.stack) return this.onStackTap(t.dataset.stack);
       if (t.dataset.dex) return this.showDex(+t.dataset.dex);
       if (t.dataset.deal) return Shop.buyDeal(+t.dataset.deal);
       if (t.dataset.bld) return this.showBuilding(+t.dataset.bld);

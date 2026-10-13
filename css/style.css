@@ -205,3 +205,83 @@
 .online-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
 .input { width: 100%; border-radius: 14px; border: 2px solid #bae6fd; padding: .6rem .8rem; font-weight: 700; outline: none; background: #fff; }
 .input:focus { border-color: #0ea5e9; }
+
+/* merge-ready badge on compact pet cards */
+.ccard .mrg { position: absolute; right: 3px; bottom: 3px; z-index: 4; width: 18px; height: 18px; border-radius: 50%;
+  background: #22c55e; color: #fff; font-size: 11px; font-weight: 800; display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 0 0 2px #fff, 0 0 10px #22c55e; animation: mrgPulse 1.4s ease-in-out infinite; text-shadow: none; }
+@keyframes mrgPulse { 50% { transform: scale(1.18); } }
+.mrg-inline { display: inline-flex; width: 16px; height: 16px; border-radius: 50%; background: #22c55e; color: #fff; font-size: 10px; align-items: center; justify-content: center; }
+
+/* ==========================================================
+   ISLAND v2 — richer sea, island, building plots, pet auras
+   ========================================================== */
+.scene { height: 390px; }
+.sea-depth { position: absolute; inset: 0; background: radial-gradient(ellipse 70% 60% at 50% 55%, transparent 40%, rgba(8,47,73,.45) 100%); pointer-events: none; }
+.glint { position: absolute; width: 6px; height: 6px; background: #fff; transform: rotate(45deg); border-radius: 1px; opacity: 0;
+  box-shadow: 0 0 6px #fff; animation: glint 3s ease-in-out infinite; pointer-events: none; }
+@keyframes glint { 0%,70%,100% { opacity: 0; transform: rotate(45deg) scale(.4); } 80% { opacity: .9; transform: rotate(45deg) scale(1); } }
+.boat { position: absolute; bottom: 3%; font-size: 26px; z-index: 6; animation: sail 45s linear infinite, bob 2.4s ease-in-out infinite; pointer-events: none; }
+@keyframes sail { from { left: -10%; } to { left: 105%; } }
+@keyframes bob { 50% { translate: 0 -4px; rotate: -4deg; } }
+
+.isle .ring { position: absolute; inset: -4%; border-radius: 50%; border: 3px solid rgba(255,255,255,.55); animation: ringOut 4s ease-out infinite; pointer-events: none; }
+.isle .ring.r2 { animation-delay: 2s; }
+@keyframes ringOut { from { inset: -2%; opacity: .9; } to { inset: -14%; opacity: 0; } }
+.isle-sand { background: radial-gradient(ellipse at 45% 35%, #fffbeb 0%, var(--sand1) 35%, var(--sand2) 100%); box-shadow: 0 14px 0 rgba(0,0,0,.10), inset 0 -10px 18px rgba(146,64,14,.18); }
+.isle-wet { position: absolute; inset: 0; border-radius: 50%; background: radial-gradient(ellipse, transparent 80%, rgba(120,72,20,.22) 92%, transparent 100%); pointer-events: none; }
+.isle-grass { overflow: hidden; box-shadow: inset 0 -10px 0 rgba(0,0,0,.07), inset 0 6px 14px rgba(255,255,255,.35), 0 3px 0 rgba(255,255,255,.35); }
+.isle-grass .patch { position: absolute; width: 22%; height: 16%; border-radius: 50%; background: rgba(255,255,255,.16); }
+.isle-grass .patch:nth-child(2) { background: rgba(0,80,20,.08); }
+.path { position: absolute; left: 27%; right: 27%; top: 42%; bottom: 24%; border-radius: 50%; border: 5px dotted rgba(254,243,199,.75); pointer-events: none; }
+.deco.palm { font-size: 34px; animation: sway 3.2s ease-in-out infinite; transform-origin: 50% 100%; }
+@keyframes sway { 50% { rotate: 5deg; } }
+
+/* buildings stand on plots */
+.bld .ico { position: relative; z-index: 2; }
+.bld .plot { position: absolute; left: 50%; top: .78em; width: 1.7em; height: .5em; margin-left: -.85em; border-radius: 50%; z-index: 1;
+  background: radial-gradient(ellipse at 50% 35%, #e7cfa4, #a47a4a); box-shadow: 0 3px 0 rgba(0,0,0,.18); }
+.bld.empty .plot { background: rgba(255,255,255,.35); border: 2px dashed rgba(146,64,14,.55); }
+.bld.empty .ico { filter: drop-shadow(0 4px 2px rgba(0,0,0,.25)); opacity: .9; }
+.bld .lvl { position: relative; z-index: 3; display: inline-block; margin-top: 2px; background: linear-gradient(180deg, #fef3c7, #fbbf24); color: #b45309;
+  border-radius: 999px; padding: 0 6px; font-size: 9px; font-weight: 800; box-shadow: 0 2px 0 rgba(146,64,14,.35); letter-spacing: -1px; }
+.bld .lvl .off { color: rgba(146,64,14,.25); }
+.bld.empty .lvl { background: #fff; color: #0369a1; letter-spacing: 0; }
+.bld .up { display: none; position: absolute; left: 50%; top: -20px; margin-left: -10px; width: 20px; height: 20px; border-radius: 50%; z-index: 4;
+  background: #22c55e; color: #fff; font-size: 12px; font-weight: 800; align-items: center; justify-content: center; box-shadow: 0 0 0 2px #fff, 0 0 10px #22c55e; }
+.bld.can .up { display: flex; animation: upBob 1s ease-in-out infinite; }
+@keyframes upBob { 50% { transform: translateY(-5px); } }
+.bld.maxed .ico { filter: drop-shadow(0 4px 2px rgba(0,0,0,.25)) drop-shadow(0 0 10px rgba(253,224,71,.9)); }
+.bld .flag { position: absolute; right: -8px; top: -4px; font-size: 14px; z-index: 3; animation: sway 1.6s ease-in-out infinite; transform-origin: 0 100%; }
+.bld .spark { position: absolute; font-size: 11px; z-index: 3; animation: twinkle 1.6s infinite; }
+.bld .spark.s1 { left: -8px; top: 20%; } .bld .spark.s2 { right: -4px; top: 55%; animation-delay: .8s; }
+
+/* pets: element aura, neon ring, cosmic orbit, emotes */
+.walker .body { font-size: 34px; }
+.walker .aura { position: absolute; left: 50%; bottom: -7px; width: 42px; height: 13px; margin-left: -21px; border-radius: 50%;
+  background: radial-gradient(ellipse, var(--aura) 0%, transparent 70%); opacity: .6; }
+.walker.t3 .aura { opacity: .85; animation: auraPulse 2s ease-in-out infinite; }
+.walker.t4 .aura { border: 2px solid #22d3ee; box-shadow: 0 0 8px #22d3ee, 0 0 14px #e879f9; opacity: 1; animation: auraPulse 1.4s ease-in-out infinite; }
+.walker.t5 .aura { width: 54px; margin-left: -27px; height: 16px; bottom: -8px; background: radial-gradient(ellipse, #fde047 0%, #a855f7 55%, transparent 75%);
+  box-shadow: 0 0 14px #a855f7; opacity: 1; animation: auraPulse 1.2s ease-in-out infinite; }
+@keyframes auraPulse { 50% { transform: scale(1.15); opacity: .7; } }
+.walker .orbit { position: absolute; left: 50%; top: 45%; width: 0; height: 0; animation: orbit 2.4s linear infinite; z-index: 5; }
+.walker .orbit i { position: absolute; font-style: normal; font-size: 10px; color: #fde047; text-shadow: 0 0 6px #f0abfc; left: -5px; top: -6px; }
+.walker .orbit i:nth-child(1) { transform: rotate(0deg) translateX(24px); }
+.walker .orbit i:nth-child(2) { transform: rotate(120deg) translateX(24px); }
+.walker .orbit i:nth-child(3) { transform: rotate(240deg) translateX(24px); }
+@keyframes orbit { to { transform: rotate(360deg); } }
+.walker.t5::before { content: none; }
+.emote { position: absolute; z-index: 60; font-size: 15px; background: #fff; border-radius: 12px 12px 12px 3px; padding: 1px 5px; box-shadow: 0 2px 6px rgba(0,0,0,.2);
+  pointer-events: none; animation: emote 1.8s ease-out forwards; }
+@keyframes emote { 0% { transform: scale(0); opacity: 0; } 15% { transform: scale(1.15); opacity: 1; } 25%,75% { transform: scale(1); opacity: 1; } 100% { transform: translateY(-14px); opacity: 0; } }
+
+/* pet cards: glossy highlight */
+.ccard-in::before { content: ''; position: absolute; left: 0; right: 0; top: 0; height: 45%; z-index: 1; pointer-events: none;
+  background: linear-gradient(180deg, rgba(255,255,255,.30), rgba(255,255,255,0)); }
+/* fixes: keep star ribbon right under the building, smaller plots */
+.bld { line-height: 1; }
+.bld .lvl { display: block; width: max-content; margin: 3px auto 0; line-height: 14px; }
+.bld .plot { width: 1.4em; margin-left: -.7em; height: .42em; top: .8em; }
+/* merge badge sits on the card frame (outside the shiny filter) */
+.ccard > .mrg { position: absolute; left: -4px; top: -4px; right: auto; bottom: auto; z-index: 6; width: 20px; height: 20px; }

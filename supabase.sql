@@ -421,3 +421,5 @@ alter table public.players add column if not exists is_admin boolean not null de
 --   get_me(): also returns shields
 alter table public.players add column if not exists shields int not null default 0 check (shields between 0 and 3);
 alter table public.attacks add column if not exists blocked boolean not null default false;
+--   add_shields(p_token, p_count) → { added, shields } — fills up to 3 (migration "add_shields_by_bet");
+--   the client refunds (p_count - added) as energy

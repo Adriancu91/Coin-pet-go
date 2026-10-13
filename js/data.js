@@ -26,7 +26,6 @@ const CONFIG = {
   CAPTURE_COPIES: 3,                // captured "too strong" pet -> THREE 1★ copies
   HIGH_TIER_CAPTURE: 3,
   MAX_SHIELDS: 3,                   // like Coin Master: each shield blocks one raid
-  SHIELD_FULL_GOLD: 300,            // gold (× bet) when a shield is won but you already have 3
   NO_TARGET_GOLD: 50,                // consolation gold (× bet) when nobody can be raided
 
   SHARE_ENERGY: 50,

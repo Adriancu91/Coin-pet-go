@@ -62,11 +62,19 @@ const Island = {
     if (force || !scene.dataset.level || +scene.dataset.level !== S().island.level) {
       scene.dataset.level = S().island.level;
       scene.innerHTML = `
+        <div class="sea-depth"></div>
+        ${Array.from({ length: 14 }, (_, i) => `<span class="glint" style="left:${(i * 37) % 96 + 2}%;top:${(i * 53) % 92 + 4}%;animation-delay:${(i * 0.43).toFixed(2)}s"></span>`).join('')}
         <span class="cloud" style="top:4%;animation-duration:38s;animation-delay:-8s">☁️</span>
         <span class="cloud" style="top:14%;font-size:24px;animation-duration:55s;animation-delay:-30s">☁️</span>
+        <span class="boat">⛵</span>
         <div class="isle" id="isle" style="--sand1:${th.sand[0]};--sand2:${th.sand[1]};--grass1:${th.grass[0]};--grass2:${th.grass[1]}">
-          <div class="isle-foam"></div><div class="isle-sand"></div><div class="isle-grass"></div>
+          <div class="ring r1"></div><div class="ring r2"></div>
+          <div class="isle-foam"></div><div class="isle-sand"></div><div class="isle-wet"></div>
+          <div class="isle-grass"><div class="patch" style="left:18%;top:20%"></div><div class="patch" style="left:60%;top:55%;width:28%"></div><div class="patch" style="left:30%;top:68%;width:18%"></div></div>
+          <div class="path"></div>
           ${DATA.DECO_SPOTS.map(([x, y], i) => `<span class="deco" style="left:${x}%;top:${y}%">${th.deco[i % th.deco.length]}</span>`).join('')}
+          <span class="deco palm" style="left:7%;top:48%">🌴</span><span class="deco palm" style="left:93%;top:44%;animation-delay:-1.2s">🌴</span>
+          <span class="deco" style="left:48%;top:97%;font-size:14px">🐚</span><span class="deco" style="left:30%;top:9%;font-size:13px">🌼</span><span class="deco" style="left:70%;top:14%;font-size:13px">🌸</span>
           <div id="buildLayer"></div>
           <div id="petLayer"></div>
         </div>
@@ -78,6 +86,7 @@ const Island = {
       this.renderBuildings();
     }
     this.renderPets();
+    this.refreshAffordable();
   },
 
   renderBuildings(popIdx = -1) {
@@ -85,11 +94,16 @@ const Island = {
     const th = this.theme();
     layer.innerHTML = th.buildings.map(([ico, name], b) => {
       const lvl = S().island.buildings[b];
+      const max = lvl >= CONFIG.BUILDING_MAX;
       const [x, y] = DATA.BUILDING_SPOTS[b];
-      return `<div class="bld ${lvl ? '' : 'empty'} ${b === popIdx ? 'built-pop' : ''}" style="left:${x}%;top:${y}%;font-size:${28 + lvl * 7}px" data-bld="${b}">
-        <span class="ico">${lvl ? ico : '🚧'}</span>
-        <span class="lvl">${lvl ? '★'.repeat(lvl) : 'build'}</span></div>`;
+      return `<div class="bld lv${lvl} ${lvl ? '' : 'empty'} ${max ? 'maxed' : ''} ${b === popIdx ? 'built-pop' : ''}" style="left:${x}%;top:${y}%;font-size:${30 + lvl * 7}px;z-index:${3 + Math.round(y)}" data-bld="${b}">
+        <span class="plot"></span>
+        ${max ? '<span class="flag">🚩</span><span class="spark s1">✨</span><span class="spark s2">✨</span>' : ''}
+        <span class="up">⬆</span>
+        <span class="ico">${lvl ? ico : '🏗️'}</span>
+        <span class="lvl">${lvl ? '★'.repeat(lvl) + '<span class="off">' + '★'.repeat(CONFIG.BUILDING_MAX - lvl) + '</span>' : 'BUILD'}</span></div>`;
     }).join('');
+    this.refreshAffordable();
     if (popIdx >= 0) {
       const [x, y] = DATA.BUILDING_SPOTS[popIdx];
       ['💨', '✨', '💨'].forEach((d, i) => {
@@ -99,6 +113,14 @@ const Island = {
         UI.el('isle').appendChild(s); setTimeout(() => s.remove(), 1000);
       });
     }
+  },
+
+  /** Green arrow over buildings you can afford to upgrade right now */
+  refreshAffordable() {
+    document.querySelectorAll('#buildLayer .bld').forEach(el => {
+      const b = +el.dataset.bld, lvl = S().island.buildings[b];
+      el.classList.toggle('can', lvl < CONFIG.BUILDING_MAX && S().gold >= this.cost(b, lvl));
+    });
   },
 
   /** Random point on the grass (percent of the island box) */
@@ -127,8 +149,10 @@ const Island = {
     });
     layer.innerHTML = this.walkers.length ? this.walkers.map(w => {
       const c = CREATURES[w.id];
-      return `<div class="walker t${w.stars}" style="left:${w.x}%;top:${w.y}%" data-walker="${w.id}">
-        <span class="shadow"></span><span class="tag">${'★'.repeat(w.stars)}</span>
+      const el = DATA.ELEMENTS[c.element];
+      return `<div class="walker t${w.stars}" style="left:${w.x}%;top:${w.y}%;--aura:${el.c1};--aura2:${el.c2}" data-walker="${w.id}">
+        <span class="aura"></span><span class="shadow"></span><span class="tag">${'★'.repeat(w.stars)}</span>
+        ${w.stars >= 5 ? '<span class="orbit"><i>✦</i><i>✦</i><i>✦</i></span>' : ''}
         <span class="body"><span class="face">${c.emoji}</span></span></div>`;
     }).join('')
       : `<div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white/85 rounded-2xl px-3 py-2 text-xs font-bold text-slate-600 text-center z-10">No pets yet!<br>Hatch eggs in the Shop 🥚</div>`;
@@ -147,6 +171,17 @@ const Island = {
       w.el.style.zIndex = 4 + Math.round(ny);   // pets lower on screen stand in front
       const el = w.el; setTimeout(() => el.classList.remove('moving'), 2800);
     }
+    // Idle emotes: a resting pet now and then shows a little reaction
+    const idle = this.walkers.filter(w => w.el && !w.el.classList.contains('moving'));
+    if (idle.length && Math.random() < 0.35) this.emote(Utils.pick(idle), Utils.pick(['💤', '🎵', '❤️', '✨', '💬', '😋']));
+  },
+
+  emote(w, icon) {
+    const isle = UI.el('isle'); if (!isle) return;
+    const e = document.createElement('span');
+    e.className = 'emote'; e.textContent = icon;
+    e.style.left = `calc(${w.x}% + 8px)`; e.style.top = `calc(${w.y}% - 52px)`;
+    isle.appendChild(e); setTimeout(() => e.remove(), 1800);
   },
 
   start() {

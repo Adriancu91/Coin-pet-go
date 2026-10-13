@@ -255,24 +255,35 @@ const Raid = {
     st.raids = st.raids.slice(0, 10);
   },
 
-  /** 🛡️🛡️🛡️ on the slots: +1 shield (max 3); when full, gold instead */
+  /**
+   * 🛡️🛡️🛡️ on the slots gives as many shields as the bet (x50 → 50).
+   * Shields fill up to 3; every shield that doesn't fit comes back as 1⚡.
+   * e.g. x50 with 0 shields → 3 shields + 47⚡ · x3 with 1 shield → 2 shields + 1⚡
+   */
   async gainShield(bet) {
     const st = S(); const res = UI.el('slotResult');
-    let n = null;
-    if (Net.online) { try { n = await Net.addShield(); } catch (e) { console.warn(e); } }
-    else n = st.shields < CONFIG.MAX_SHIELDS ? st.shields + 1 : -1;
-    if (n === null) { res.textContent = '🛡️ Could not reach the server — try again'; return; }
-    if (n >= 0) {
-      st.shields = n;
-      res.textContent = `🛡️ Shield! (${n}/${CONFIG.MAX_SHIELDS})`;
-      UI.toast(`🛡️ +1 Shield — ${n}/${CONFIG.MAX_SHIELDS}. Raids on you will be blocked!`, 'blue');
-      Social.log('🛡️', `Won a shield (${n}/${CONFIG.MAX_SHIELDS})`);
+    let added = null, total = null;
+    if (Net.online) {
+      try { const r = await Net.addShields(bet); added = r.added; total = r.shields; } catch (e) { console.warn(e); }
     } else {
-      const g = CONFIG.SHIELD_FULL_GOLD * bet;
-      st.shields = CONFIG.MAX_SHIELDS;
-      st.gold += g;
-      res.textContent = `🛡️ Shields full! +${Utils.fmt(g)} Gold`;
+      added = Math.max(0, Math.min(CONFIG.MAX_SHIELDS - st.shields, bet));
+      total = st.shields + added;
     }
+    if (added === null) {          // server unreachable: give the whole bet back as energy
+      Energy.add(bet, true);
+      res.textContent = `🛡️ Server busy — +${bet}⚡ refunded`;
+      UI.renderTop(); return;
+    }
+    st.shields = total;
+    const refund = bet - added;
+    if (refund > 0) Energy.add(refund, true);
+    const parts = [];
+    if (added) parts.push(`+${added} 🛡️ (${total}/${CONFIG.MAX_SHIELDS})`);
+    if (refund) parts.push(`+${refund}⚡ back`);
+    res.textContent = `🛡️ ${parts.join(' · ')}`;
+    if (added) UI.toast(`🛡️ +${added} shield${added > 1 ? 's' : ''} — ${total}/${CONFIG.MAX_SHIELDS}${refund ? ` · ${refund}⚡ returned` : ''}`, 'blue');
+    else UI.toast(`🛡️ Shields already full — ${refund}⚡ returned`, 'blue');
+    Social.log('🛡️', `Shield spin x${bet}: +${added} shields, +${refund}⚡ back`);
     UI.renderTop();
   },
 
