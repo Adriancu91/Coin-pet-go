@@ -411,3 +411,13 @@ alter table public.players add column if not exists is_admin boolean not null de
 -- get_me also returns 'is_admin'; raid() and leaderboard() skip admin accounts
 -- (applied in migration "admin_flag"). Make someone admin:
 --   update public.players set is_admin = true where nickname = 'Adrian91';
+
+-- ---------- SHIELDS (Coin Master style) -------------------------------
+-- Applied in migration "shields":
+--   players.shields int 0–3, attacks.blocked boolean
+--   add_shield(p_token) → new count (or -1 when already 3)
+--   raid(): bet capped at 50; a target with shields loses 1 shield and the raid steals nothing
+--   ack_attacks(): returns { attacks: [...{attacker_name, stolen, blocked}], shields: n }
+--   get_me(): also returns shields
+alter table public.players add column if not exists shields int not null default 0 check (shields between 0 and 3);
+alter table public.attacks add column if not exists blocked boolean not null default false;

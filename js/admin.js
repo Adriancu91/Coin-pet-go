@@ -37,7 +37,7 @@ const Admin = {
         btn('island', 'Complete island', '', 'bg-sky-500 text-white') +
         btn('nextisland', 'Skip to next island', '', 'bg-sky-500 text-white'))}
       ${section('🎰 Force next spin' + (Slot.forced ? ` — <b class="text-pink-600">${Slot.forced}</b>` : ''),
-        ['raid', 'jackpot', 'bag', 'egg', 'energy'].map(o => btn('force', o, o, Slot.forced === o ? 'bg-pink-600 text-white' : 'bg-pink-100 text-pink-700')).join(''))}
+        ['raid', 'shield', 'jackpot', 'bag', 'egg', 'energy'].map(o => btn('force', o, o, Slot.forced === o ? 'bg-pink-600 text-white' : 'bg-pink-100 text-pink-700')).join(''))}
       ${section('🧪 Misc',
         btn('pity', 'Next egg guaranteed', '', 'bg-emerald-500 text-white') +
         btn('share', 'Reset share cooldown', '', 'bg-emerald-500 text-white') +

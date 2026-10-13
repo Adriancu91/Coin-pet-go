@@ -94,6 +94,7 @@ const Net = {
     else if (localMine) chosen = local;
     Store.state = Store.normalize(chosen);
     Store.state.ownerId = me.id;
+    Store.state.shields = me.shields || 0;
     Energy.regen(Date.now());
 
     this.online = true;
@@ -126,7 +127,9 @@ const Net = {
     if (!this.online || this.syncing) return;
     this.syncing = true;
     try {
-      const attacks = await this.call('ack_attacks');
+      const ack = await this.call('ack_attacks');
+      const attacks = ack?.attacks || [];
+      if (typeof ack?.shields === 'number') S().shields = ack.shields;
       if (attacks?.length) { Raid.applyIncoming(attacks); UI.renderRaidLog(); }
 
       const gifts = await this.call('claim_gifts');
@@ -159,6 +162,7 @@ const Net = {
   /* ---------- game calls ---------- */
   raid(bet) { return this.call('raid', { p_bet: bet }); },
   buyTicket() { return this.call('buy_ticket'); },
+  addShield() { return this.call('add_shield'); },
   async refreshTombola() { this.tombola = await this.call('tombola_status'); },
   addFriend(nick) { return this.call('add_friend', { p_nick: nick }); },
   sendGift(id) { return this.call('send_gift', { p_to: id }); },

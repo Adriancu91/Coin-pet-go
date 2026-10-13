@@ -75,6 +75,8 @@ const UI = {
   renderTop() {
     const st = S(); const now = Date.now();
     this.el('goldText').textContent = Utils.fmt(st.gold);
+    this.el('shieldBox').innerHTML = Array.from({ length: CONFIG.MAX_SHIELDS }, (_, i) =>
+      `<span class="${i < (st.shields || 0) ? '' : 'opacity-25 grayscale'}">🛡️</span>`).join('');
     this.el('energyText').textContent = `${Utils.fmt(st.energy)} / ${Utils.fmt(CONFIG.MAX_ENERGY)}`;
     const fill = this.el('energyFill');
     fill.style.width = Math.min(100, (st.energy / CONFIG.MAX_ENERGY) * 100) + '%';
@@ -98,7 +100,9 @@ const UI = {
   renderRaidLog() {
     const raids = S().raids;
     this.el('raidLog').innerHTML = raids.length
-      ? raids.map(r => r.dir === 'in'
+      ? raids.map(r => r.dir === 'in' && r.capText === 'blocked'
+        ? `<div class="flex justify-between gap-2 bg-emerald-50 rounded-xl px-2 py-1"><span class="truncate">🛡️ <b>${Utils.esc(r.name)}</b> attacked — blocked!</span><b class="text-emerald-600 whitespace-nowrap">-0🪙</b></div>`
+        : r.dir === 'in'
         ? `<div class="flex justify-between gap-2 bg-rose-50 rounded-xl px-2 py-1"><span class="truncate">🛡️ <b>${Utils.esc(r.name)}</b> raided you</span><b class="text-rose-600 whitespace-nowrap">-${Utils.fmt(r.stolen)}🪙</b></div>`
         : `<div class="flex justify-between gap-2 bg-sky-50 rounded-xl px-2 py-1"><span class="truncate">⚔️ ${Utils.esc(r.name)}${r.capText ? ` · <b class="text-violet-600">${r.capText}</b>` : ''}</span><b class="text-amber-600 whitespace-nowrap">+${Utils.fmt(r.stolen)}🪙</b></div>`).join('')
       : `<div class="text-slate-400 text-sm">No raids yet — hit ⚔️⚔️⚔️ to raid a real player's island!</div>`;
@@ -150,6 +154,19 @@ const UI = {
       }
       this.el('raidRes').innerHTML = `<div class="text-2xl font-extrabold text-amber-600">+${Utils.fmt(stolen)} Gold stolen!</div>${capHtml}`;
     }, 1100);
+  },
+
+  showRaidBlocked(owner, island, left, consolation) {
+    this.showModal(`
+      <div class="text-center">
+        <div class="text-xs font-bold text-slate-500">RAIDING A REAL PLAYER</div>
+        <div class="text-xl font-extrabold text-sky-800">🏝️ ${Utils.esc(owner)}'s ${Utils.esc(island)}</div>
+        <div class="text-7xl my-3 pop-in">🛡️</div>
+        <div class="text-2xl font-extrabold text-sky-700">Blocked by a shield!</div>
+        <div class="text-sm text-slate-500 mt-1">${Utils.esc(owner)} has ${left} shield${left === 1 ? '' : 's'} left.</div>
+        <div class="text-lg font-extrabold text-amber-600 mt-2">Consolation +${Utils.fmt(consolation)} Gold</div>
+        <button class="btn w-full mt-3 bg-sky-600 text-white" data-close>OK</button>
+      </div>`);
   },
 
   /* ---------- Island tab ---------- */

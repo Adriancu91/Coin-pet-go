@@ -22,6 +22,7 @@ const Store = {
       maxStar: {},            // speciesId -> highest tier ever reached
       setClaims: {},          // tier -> true once the full 50-set was completed (also unlocks merging that tier)
       pity: 0,
+      shields: 0,             // 0–3 (server copy is authoritative when online)
       eggsOpened: 0,
       deals: { day: '', items: [], bought: [] },
       shareReadyAt: 0,
@@ -238,6 +239,7 @@ const Slot = {
       case 'energy':  { const e = 3 * bet; Energy.add(e); UI.flashReels(); res.textContent = `⚡ +${e} Energy!`; break; }
       case 'egg':     { UI.flashReels(); res.textContent = '🥚 Free Egg!'; Shop.openEgg(true); break; }
       case 'raid':    { UI.flashReels(); res.textContent = '⚔️ RAID TIME!'; await Raid.start(bet); break; }
+      case 'shield':  { UI.flashReels(); await Raid.gainShield(bet); break; }
       default:        res.textContent = 'So close... spin again! 🌴';
     }
     UI.renderTop();
@@ -251,6 +253,27 @@ const Raid = {
     const st = S();
     st.raids.unshift({ t: Date.now(), ...entry });
     st.raids = st.raids.slice(0, 10);
+  },
+
+  /** 🛡️🛡️🛡️ on the slots: +1 shield (max 3); when full, gold instead */
+  async gainShield(bet) {
+    const st = S(); const res = UI.el('slotResult');
+    let n = null;
+    if (Net.online) { try { n = await Net.addShield(); } catch (e) { console.warn(e); } }
+    else n = st.shields < CONFIG.MAX_SHIELDS ? st.shields + 1 : -1;
+    if (n === null) { res.textContent = '🛡️ Could not reach the server — try again'; return; }
+    if (n >= 0) {
+      st.shields = n;
+      res.textContent = `🛡️ Shield! (${n}/${CONFIG.MAX_SHIELDS})`;
+      UI.toast(`🛡️ +1 Shield — ${n}/${CONFIG.MAX_SHIELDS}. Raids on you will be blocked!`, 'blue');
+      Social.log('🛡️', `Won a shield (${n}/${CONFIG.MAX_SHIELDS})`);
+    } else {
+      const g = CONFIG.SHIELD_FULL_GOLD * bet;
+      st.shields = CONFIG.MAX_SHIELDS;
+      st.gold += g;
+      res.textContent = `🛡️ Shields full! +${Utils.fmt(g)} Gold`;
+    }
+    UI.renderTop();
   },
 
   /** Consolation when there is nobody to raid / offline */
@@ -271,6 +294,16 @@ const Raid = {
     if (!res.found) return this.consolation(bet, 'No other islands yet — invite friends!');
 
     st.stats.raids++;
+    const isle0 = Island.nameFor(res.island_level || 1);
+    if (res.blocked) {
+      const g = CONFIG.NO_TARGET_GOLD * bet;
+      st.gold += g;
+      this.record({ dir: 'out', name: `${res.nickname}'s ${isle0}`, stolen: g, capText: '🛡️ blocked' });
+      Social.log('🛡️', `${res.nickname}'s shield blocked your raid (+${g} Gold consolation)`);
+      UI.showRaidBlocked(res.nickname, isle0, res.shields_left || 0, g);
+      UI.renderTop(); UI.renderRaidLog(); Store.save();
+      return;
+    }
     const stolen = Math.max(0, Math.floor(res.stolen || 0));
     st.gold += stolen;
     const pets = (Array.isArray(res.pets) ? res.pets : []).filter(p => CREATURES[p?.id] && p.stars >= 1 && p.stars <= 5);
@@ -304,6 +337,12 @@ const Raid = {
   applyIncoming(rows) {
     const st = S();
     for (const r of rows) {
+      if (r.blocked) {
+        this.record({ dir: 'in', name: r.attacker_name, stolen: 0, capText: 'blocked' });
+        Social.log('🛡️', `${r.attacker_name} attacked you — your shield blocked it!`);
+        UI.toast(`🛡️ ${r.attacker_name} attacked — your shield blocked it!`, 'blue');
+        continue;
+      }
       const loss = Math.min(st.gold, Math.max(0, Number(r.stolen) || 0));
       st.gold -= loss;
       this.record({ dir: 'in', name: r.attacker_name, stolen: loss, capText: '' });

@@ -25,6 +25,8 @@ const CONFIG = {
 
   CAPTURE_COPIES: 3,                // captured "too strong" pet -> THREE 1★ copies
   HIGH_TIER_CAPTURE: 3,
+  MAX_SHIELDS: 3,                   // like Coin Master: each shield blocks one raid
+  SHIELD_FULL_GOLD: 300,            // gold (× bet) when a shield is won but you already have 3
   NO_TARGET_GOLD: 50,                // consolation gold (× bet) when nobody can be raided
 
   SHARE_ENERGY: 50,
@@ -81,15 +83,16 @@ const DATA = {
   DECO_SPOTS: [[12, 62], [88, 58], [40, 26], [62, 92]],
 
   SLOT_OUTCOMES: [
-    { id: 'coins',   weight: 34, sym: '🪙' },
+    { id: 'coins',   weight: 30, sym: '🪙' },
     { id: 'bag',     weight: 13, sym: '💰' },
     { id: 'jackpot', weight: 2,  sym: '💎' },
     { id: 'raid',    weight: 18, sym: '⚔️' },
     { id: 'energy',  weight: 10, sym: '⚡' },
     { id: 'egg',     weight: 4,  sym: '🥚' },
-    { id: 'miss',    weight: 19, sym: null },
+    { id: 'shield',  weight: 10, sym: '🛡️' },
+    { id: 'miss',    weight: 13, sym: null },
   ],
-  SLOT_SYMBOLS: ['🪙', '💰', '💎', '⚔️', '⚡', '🥚', '🍒', '🌴'],
+  SLOT_SYMBOLS: ['🪙', '💰', '💎', '⚔️', '⚡', '🥚', '🛡️', '🍒', '🌴'],
   TIER_NAMES: ['Base look', 'Larger badge', 'Shiny palette', 'Neon glow border', 'Cosmic particles'],
 };
 

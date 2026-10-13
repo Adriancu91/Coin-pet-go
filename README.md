@@ -31,12 +31,13 @@ Without signing in you can still play offline (slots, eggs, island, merges); rai
 | Energy | Cap 2000 · +3 every 60 s (also offline) · friend gifts & Tombola prizes can exceed the cap |
 | Island | 5 buildings × 4★ each, paid with Gold. Fully built → reward + sail to the next island (5 themes, then they repeat II, III…) |
 | Animated pets | Your strongest pet of each species (up to 10) walks around the island; tap one to play |
-| Slots | 1⚡ × bet (x1/x3/x10/x50): Coins, Big Bag, Jackpot, Energy, Free Egg, **Raid** |
+| Slots | 1⚡ × bet (x1/x3/x10/x50): Coins, Big Bag, Jackpot, Energy, Free Egg, **Shield**, **Raid** |
+| Shields | 🛡️🛡️🛡️ on the slots = +1 shield (max 3; when full you get Gold). Each shield blocks one raid on your island — the attacker gets only a small consolation. Gold spent on buildings can never be stolen |
 | Merge | 2 × identical N★ → 1 × (N+1)★ — **only after the full 50-pet set at N★ is complete**. Before that, keep the duplicates |
 | Rewards | New species +10⚡ · full set at tier T = 100 × T ⚡ (and unlocks merging that tier) |
 | Egg gacha | 500 Gold · 50% hatch 1★ / 50% empty · 3 empties in a row → next egg guaranteed |
 | Daily deals | 3 pets per day for Gold, reset at midnight |
-| Raids | A random **real player**: steal 10–30% of their Gold · 5% chance to capture one of their 3 defending pets · above your average tier (or 3★+) → three 1★ copies. The victim sees the raid next time they play |
+| Raids | A random **real player** (bet up to x50 counts): steal 10–30% × bet/2 of their Gold (blocked by a shield) · 5% chance to capture one of their 3 defending pets · above your average tier (or 3★+) → three 1★ copies. The victim sees the raid next time they play |
 | Invite | Real WhatsApp / share link, +50⚡ every 2 h |
 | Friends | Add by nickname · send 10⚡ to each friend every 12 h |
 | Tombola | Every 5 h · ticket 3⚡ · pool ÷ 3 winners × 10 · needs at least 3 real players, otherwise tickets are refunded |
