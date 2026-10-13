@@ -86,7 +86,7 @@ const Net = {
   /** Load profile + pick the newest save (cloud vs this device), then start syncing */
   async afterLogin() {
     const me = await this.call('get_me');
-    this.profile = { id: me.id, nickname: me.nickname };
+    this.profile = { id: me.id, nickname: me.nickname, isAdmin: !!me.is_admin };
     const local = Store.loadLocal();
     const localMine = local && (!local.ownerId || local.ownerId === me.id);
     let chosen = null;

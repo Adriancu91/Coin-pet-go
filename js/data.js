@@ -12,7 +12,7 @@ const CONFIG = {
   START_ENERGY: 300,
   START_GOLD: 1500,
 
-  SPIN_COST: 10,                    // energy per spin (× bet)
+  SPIN_COST: 1,                     // energy per spin (× bet) — 1 like Coin Master
   BETS: [1, 3, 10],
 
   EGG_PRICE: 500,
@@ -25,7 +25,7 @@ const CONFIG = {
 
   CAPTURE_COPIES: 3,                // captured "too strong" pet -> THREE 1★ copies
   HIGH_TIER_CAPTURE: 3,
-  NO_TARGET_GOLD: 150,              // consolation gold (× bet) when nobody can be raided
+  NO_TARGET_GOLD: 50,                // consolation gold (× bet) when nobody can be raided
 
   SHARE_ENERGY: 50,
   SHARE_COOLDOWN_MS: 2 * HOUR,

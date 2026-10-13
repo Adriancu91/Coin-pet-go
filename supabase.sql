@@ -405,3 +405,9 @@ to anon, authenticated;
 -- ---------- MODERATION ------------------------------------------------
 -- To remove a cheater from the game (run in SQL Editor):
 --   update public.players set banned = true where nickname = 'TheirNick';
+
+-- ---------- ADMIN (testing accounts) ----------------------------------
+alter table public.players add column if not exists is_admin boolean not null default false;
+-- get_me also returns 'is_admin'; raid() and leaderboard() skip admin accounts
+-- (applied in migration "admin_flag"). Make someone admin:
+--   update public.players set is_admin = true where nickname = 'Adrian91';

@@ -355,6 +355,7 @@ const UI = {
   /* ---------- Social tab ---------- */
   renderSocial() {
     const st = S(); const now = Date.now();
+    Admin.render();
 
     // Account
     this.el('accountBox').innerHTML = Net.online
@@ -511,9 +512,10 @@ const UI = {
     document.body.addEventListener('keydown', e => { if (e.key === 'Enter' && this.el('authSubmit')) this.submitAuth(this.el('authSubmit').dataset.mode); });
 
     document.body.addEventListener('click', async e => {
-      const t = e.target.closest('[data-bet],[data-stack],[data-dex],[data-deal],[data-gift],[data-dexmerge],[data-upgrade],[data-bld],[data-walker],[data-close],#eggAgain,#travelNow,#authSubmit,#authSwitch,#openAuthBtn,#logoutBtn');
+      const t = e.target.closest('[data-admin],[data-bet],[data-stack],[data-dex],[data-deal],[data-gift],[data-dexmerge],[data-upgrade],[data-bld],[data-walker],[data-close],#eggAgain,#travelNow,#authSubmit,#authSwitch,#openAuthBtn,#logoutBtn');
       if (!t) { if (e.target.id === 'modal' && !this.el('modal').dataset.locked) this.closeModal(); return; }
       if (t.disabled) return;
+      if (t.dataset.admin) return Admin.run(t.dataset.admin, t.dataset.arg);
       if (t.dataset.bet) { if (!Slot.spinning) { S().bet = +t.dataset.bet; Store.save(); this.renderSlot(); } return; }
       if (t.dataset.upgrade) { if (t.dataset.close !== undefined) this.closeModal(); Island.upgrade(+t.dataset.upgrade); return; }
       if (t.dataset.stack) return this.onStackTap(t.dataset.stack);

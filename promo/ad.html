@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="UTF-8" />
+<title>Pocket Island Master — TikTok ad</title>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&display=swap" rel="stylesheet" />
+<!-- Real game card styles (tier visuals: shiny / neon / cosmic) -->
+<link rel="stylesheet" href="../css/style.css" />
+<style>
+  /* 1080×1920 vertical canvas, every frame is drawn by render(t) so it can be exported frame by frame */
+  html, body { margin: 0; width: 1080px; height: 1920px; overflow: hidden; background: #0891b2; }
+  body { font-family: 'Baloo 2', sans-serif; }
+  #stage { position: relative; width: 1080px; height: 1920px; overflow: hidden;
+    background: linear-gradient(180deg, #38bdf8 0%, #7dd3fc 30%, #22d3ee 60%, #0e7490 100%); }
+  .sun { position: absolute; right: 70px; top: 120px; width: 200px; height: 200px; border-radius: 50%;
+    background: radial-gradient(circle, #fff7ae 55%, rgba(255,247,174,.0) 72%); }
+  .wave { position: absolute; left: -200px; right: -200px; height: 60px;
+    background: radial-gradient(ellipse 90px 22px at 45px 22px, rgba(255,255,255,.35) 98%, transparent 100%) repeat-x;
+    background-size: 180px 60px; }
+  .scn { position: absolute; inset: 0; display: none; }
+  .cap { position: absolute; z-index: 5; left: 60px; right: 60px; text-align: center; color: #fff; font-weight: 800; line-height: 1.02;
+    -webkit-text-stroke: 10px #0c4a6e; paint-order: stroke fill; text-shadow: 0 10px 0 rgba(12,74,110,.45); }
+  .cap.big { font-size: 112px; } .cap.mid { font-size: 84px; } .cap.small { font-size: 58px; -webkit-text-stroke: 8px #0c4a6e; }
+  .yellow { color: #fde047; } .pink { color: #f9a8d4; }
+  .phone { position: absolute; left: 50%; width: 600px; height: 1080px; margin-left: -300px; border-radius: 70px;
+    background: #0f172a; padding: 18px; box-sizing: border-box; box-shadow: 0 40px 80px rgba(8,47,73,.55); }
+  .phone .screen { width: 100%; height: 100%; border-radius: 54px; overflow: hidden; position: relative; background: #fff; }
+  .phone img { width: 100%; display: block; transform-origin: 50% 30%; }
+  .notch { position: absolute; top: 18px; left: 50%; width: 170px; height: 34px; margin-left: -85px; background: #0f172a; border-radius: 0 0 22px 22px; z-index: 3; }
+  .float { position: absolute; font-size: 120px; filter: drop-shadow(0 10px 6px rgba(0,0,0,.25)); }
+  .coin { position: absolute; font-size: 84px; }
+  .pill { display: inline-block; background: #fff; color: #0c4a6e; border-radius: 999px; padding: 14px 40px; font-size: 54px; font-weight: 800;
+    box-shadow: 0 10px 0 rgba(12,74,110,.35); margin: 12px 8px; }
+  .pill.g { background: #22c55e; color: #fff; } .pill.p { background: #ec4899; color: #fff; } .pill.y { background: #facc15; color: #713f12; }
+  .cta { display: inline-block; background: linear-gradient(180deg, #a3e635, #16a34a); color: #fff; font-size: 80px; font-weight: 800;
+    border-radius: 60px; padding: 26px 70px; box-shadow: 0 16px 0 #14532d; -webkit-text-stroke: 0; }
+  .tiers { position: absolute; left: 0; right: 0; top: 760px; display: flex; justify-content: center; gap: 14px; }
+  .tierbox { width: 190px; text-align: center; }
+  .tierbox .zoom { zoom: 2.5; width: 74px; margin: 0 auto; }
+  .tierlabel { color: #fff; font-weight: 800; font-size: 40px; -webkit-text-stroke: 7px #0c4a6e; paint-order: stroke fill; margin-top: 14px; }
+  .arrow { position: absolute; left: 0; right: 0; top: 1180px; text-align: center; font-size: 70px; color: #fff; font-weight: 800;
+    -webkit-text-stroke: 8px #0c4a6e; paint-order: stroke fill; }
+  .logo { font-size: 150px; text-align: center; }
+  .flash { position: absolute; inset: 0; background: #fff; pointer-events: none; opacity: 0; }
+</style>
+</head>
+<body>
+<div id="stage">
+    <div class="wave" id="w1" style="top:1640px"></div>
+  <div class="wave" id="w2" style="top:1760px;opacity:.6"></div>
+
+  <!-- 1. HOOK -->
+  <div class="scn" id="s1">
+    <div class="cap mid" style="top:330px" id="s1a">Joc NOU pe telefon 🏝️</div>
+    <div class="cap big" style="top:470px" id="s1b"><span class="yellow">50 de pet-uri</span><br>de colecționat!</div>
+    <div id="s1floats"></div>
+    <div class="cap small" style="top:1330px" id="s1c">100% GRATUIT · fără reclame</div>
+  </div>
+
+  <!-- 2. ISLAND -->
+  <div class="scn" id="s2">
+    <div class="cap mid" style="top:150px" id="s2a">Construiește-ți <span class="yellow">insula</span> 🔨</div>
+    <div class="cap small" style="top:270px" id="s2b">iar pet-urile tale se plimbă pe ea 🐾</div>
+    <div class="phone" id="p2" style="top:400px"><div class="notch"></div><div class="screen"><img src="shots/island.png" id="i2"></div></div>
+  </div>
+
+  <!-- 3. SLOTS -->
+  <div class="scn" id="s3">
+    <div class="cap mid" style="top:150px" id="s3a">Învârte și câștigă <span class="yellow">Gold</span> 🎰</div>
+    <div class="phone" id="p3" style="top:330px"><div class="notch"></div><div class="screen"><img src="shots/slot.png" id="i3"></div></div>
+    <div id="coins"></div>
+  </div>
+
+  <!-- 4. MERGE TIERS -->
+  <div class="scn" id="s4">
+    <div class="cap mid" style="top:260px" id="s4a">Unește dublurile ✨</div>
+    <div class="cap big" style="top:390px" id="s4b"><span class="yellow">1★</span> → <span class="pink">5★ COSMIC</span></div>
+    <div class="tiers" id="tiers"></div>
+    <div class="arrow" id="s4c">Completează setul de 50 ca să deblochezi merge-ul! 🏆</div>
+  </div>
+
+  <!-- 5. RAID -->
+  <div class="scn" id="s5">
+    <div class="cap mid" style="top:140px" id="s5a">Atacă-ți <span class="yellow">prietenii</span> ⚔️</div>
+    <div class="cap small" style="top:260px" id="s5b">jucători reali — <span class="pink">fără boți!</span></div>
+    <div class="phone" id="p5" style="top:380px"><div class="notch"></div><div class="screen"><img src="shots/raid.png" id="i5"></div></div>
+  </div>
+
+  <!-- 6. CTA -->
+  <div class="scn" id="s6">
+    <div class="logo" style="position:absolute;left:0;right:0;top:230px" id="s6logo">🏝️</div>
+    <div class="cap big" style="top:420px" id="s6a">Pocket Island<br><span class="yellow">Master</span></div>
+    <div style="position:absolute;left:40px;right:40px;top:760px;text-align:center" id="s6pills">
+      <span class="pill g">100% GRATUIT</span><span class="pill p">FĂRĂ RECLAME</span><br>
+      <span class="pill y">FĂRĂ PLĂȚI</span><span class="pill">JUCĂTORI REALI</span>
+    </div>
+    <div style="position:absolute;left:0;right:0;top:1100px;text-align:center" id="s6cta"><span class="cta">🔗 Link în bio</span></div>
+    <div class="cap small" style="top:1330px" id="s6b">Joacă direct din browser 📱</div>
+  </div>
+
+  <div class="flash" id="flash"></div>
+</div>
+
+<script>
+/* ---------- deterministic timeline ---------- */
+const SCENES = [ ['s1', 0, 2.8], ['s2', 2.8, 6.4], ['s3', 6.4, 9.6], ['s4', 9.6, 13.6], ['s5', 13.6, 16.6], ['s6', 16.6, 20] ];
+const DURATION = 20;
+const $ = id => document.getElementById(id);
+const clamp = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));
+const outBack = x => { const c1 = 1.70158, c3 = c1 + 1; return 1 + c3 * Math.pow(x - 1, 3) + c1 * Math.pow(x - 1, 2); };
+const outCubic = x => 1 - Math.pow(1 - x, 3);
+/** pop-in amount for an element appearing at time `at` */
+const pop = (t, at, d = 0.45) => outBack(clamp((t - at) / d));
+function popEl(el, t, at, extra = '') {
+  const p = pop(t, at);
+  el.style.opacity = clamp((t - at) / 0.2);
+  el.style.transform = `scale(${0.4 + 0.6 * p}) ${extra}`;
+}
+
+/* build static pieces */
+const FLOATS = ['🦊','🐉','🦄','🐼','🐙','🦭','🐯','🦋','🐸','🦚','🐬','🦁'];
+$('s1floats').innerHTML = FLOATS.map((e, i) => `<div class="float" id="f${i}">${e}</div>`).join('');
+$('coins').innerHTML = Array.from({ length: 16 }, (_, i) => `<div class="coin" id="c${i}">${i % 4 === 0 ? '💰' : '🪙'}</div>`).join('');
+const TIER_PET = { emoji: '🐉', name: 'Cindrake', c1: '#ffb347', c2: '#ef4444' };
+$('tiers').innerHTML = [1, 2, 3, 4, 5].map(t => {
+  const parts = t >= 5 ? Array.from({ length: 7 }, (_, i) => `<span class="pt" style="left:${8 + i * 13}%;animation-delay:${(i * 0.37).toFixed(2)}s"></span>`).join('') : '';
+  return `<div class="tierbox" id="tb${t}"><div class="zoom"><div class="ccard tier-${t}"><div class="ccard-in" style="--c1:${TIER_PET.c1};--c2:${TIER_PET.c2}">
+    ${parts}<div class="elem">🔥</div><div class="emo">${TIER_PET.emoji}</div><div class="nm">${TIER_PET.name}</div><div class="stars">${'★'.repeat(t)}</div>
+  </div></div></div><div class="tierlabel">${['BAZĂ', 'MARE', 'SHINY', 'NEON', 'COSMIC'][t - 1]}</div></div>`;
+}).join('');
+
+/* draw one frame at time t (seconds) */
+window.render = function (t) {
+  // CSS animations (card sheen / neon / particles) follow the same clock
+  document.getAnimations().forEach(a => { a.pause(); a.currentTime = t * 1000; });
+
+  $('w1').style.transform = `translateX(${(t * 60) % 180}px)`;
+  $('w2').style.transform = `translateX(${-(t * 40) % 180}px)`;
+
+  for (const [id, a, b] of SCENES) {
+    const el = $(id);
+    const on = t >= a && t < b;
+    el.style.display = on ? 'block' : 'none';
+    if (!on) continue;
+    const vin = clamp((t - a) / 0.3), vout = clamp((b - t) / 0.25);
+    el.style.opacity = Math.min(vin, vout);
+  }
+  // white flash on every cut
+  const cut = Math.min(...SCENES.map(s => Math.abs(t - s[1])));
+  $('flash').style.opacity = t > 0.1 ? clamp(0.55 - cut * 4) : 0;
+
+  /* 1 — hook */
+  if (t < 2.8) {
+    popEl($('s1a'), t, 0.05); popEl($('s1b'), t, 0.35); popEl($('s1c'), t, 1.5);
+    FLOATS.forEach((_, i) => {
+      const el = $('f' + i);
+      const ang = i / FLOATS.length * Math.PI * 2 + t * 0.6;
+      const x = 540 + Math.cos(ang) * 400 - 60, y = 1020 + Math.sin(ang) * 190 - 70;
+      const p = pop(t, 0.6 + i * 0.08);
+      el.style.left = x + 'px'; el.style.top = (y + Math.sin(t * 5 + i) * 18) + 'px';
+      el.style.opacity = clamp((t - 0.6 - i * 0.08) / 0.15);
+      el.style.transform = `scale(${p}) rotate(${Math.sin(t * 3 + i) * 10}deg)`;
+    });
+  }
+  /* 2 — island */
+  if (t >= 2.8 && t < 6.4) {
+    const s = t - 2.8;
+    popEl($('s2a'), t, 2.85); popEl($('s2b'), t, 3.2);
+    $('p2').style.transform = `translateY(${(1 - outCubic(clamp(s / 0.6))) * 900}px)`;
+    $('i2').style.transform = `scale(${1 + s * 0.035})`;
+  }
+  /* 3 — slots + coin rain */
+  if (t >= 6.4 && t < 9.6) {
+    const s = t - 6.4;
+    popEl($('s3a'), t, 6.45);
+    $('p3').style.transform = `translateY(${(1 - outCubic(clamp(s / 0.5))) * 900}px) rotate(${Math.sin(s * 2) * 1.2}deg)`;
+    $('i3').style.transform = `scale(${1.05 + s * 0.03})`;
+    for (let i = 0; i < 16; i++) {
+      const el = $('c' + i);
+      const x = (i * 137) % 1000 + 10;
+      const y = -150 + ((s - 0.5 - i * 0.09) * (900 + (i % 5) * 120));
+      el.style.left = x + 'px'; el.style.top = y + 'px';
+      el.style.opacity = s > 0.5 + i * 0.09 ? 1 : 0;
+      el.style.transform = `rotate(${s * 200 + i * 40}deg)`;
+    }
+  }
+  /* 4 — tiers */
+  if (t >= 9.6 && t < 13.6) {
+    popEl($('s4a'), t, 9.65); popEl($('s4b'), t, 9.95);
+    for (let k = 1; k <= 5; k++) {
+      const at = 10.3 + (k - 1) * 0.45;
+      const el = $('tb' + k);
+      el.style.opacity = clamp((t - at) / 0.15);
+      el.style.transform = `translateY(${Math.sin(t * 3 + k) * 10}px) scale(${pop(t, at) * (k === 5 ? 1.08 : 1)})`;
+    }
+    popEl($('s4c'), t, 12.6);
+  }
+  /* 5 — raid */
+  if (t >= 13.6 && t < 16.6) {
+    const s = t - 13.6;
+    popEl($('s5a'), t, 13.65); popEl($('s5b'), t, 14.0);
+    const shake = s > 0.6 && s < 1.0 ? Math.sin(s * 90) * 14 : 0;
+    $('p5').style.transform = `translateY(${(1 - outCubic(clamp(s / 0.5))) * 900}px) translateX(${shake}px)`;
+    $('i5').style.transform = `translateY(${-s * 60}px) scale(1.04)`;
+  }
+  /* 6 — call to action */
+  if (t >= 16.6) {
+    popEl($('s6logo'), t, 16.65, `translateY(${Math.sin(t * 4) * 12}px)`);
+    popEl($('s6a'), t, 16.85);
+    popEl($('s6pills'), t, 17.3);
+    const beat = 1 + Math.max(0, Math.sin(t * 7)) * 0.06;
+    $('s6cta').style.opacity = clamp((t - 17.8) / 0.2);
+    $('s6cta').style.transform = `scale(${(0.4 + 0.6 * pop(t, 17.8)) * beat})`;
+    popEl($('s6b'), t, 18.3);
+  }
+};
+window.DURATION = DURATION;
+render(0);
+</script>
+</body>
+</html>

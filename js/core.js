@@ -198,6 +198,7 @@ const Collection = {
 /* ================================ SLOT ================================ */
 const Slot = {
   spinning: false,
+  forced: null,          // admin testing: force the next outcome id
 
   reelsFor(outcome) {
     if (outcome.sym) return [outcome.sym, outcome.sym, outcome.sym];
@@ -217,7 +218,8 @@ const Slot = {
     UI.renderTop(); UI.setSpinEnabled(false);
     UI.el('slotResult').textContent = 'Spinning...';
 
-    const outcome = Utils.weighted(DATA.SLOT_OUTCOMES);
+    const outcome = (this.forced && DATA.SLOT_OUTCOMES.find(o => o.id === this.forced)) || Utils.weighted(DATA.SLOT_OUTCOMES);
+    this.forced = null;
     await UI.animateReels(this.reelsFor(outcome));
     await this.resolve(outcome, st.bet);
 
@@ -230,10 +232,10 @@ const Slot = {
     const res = UI.el('slotResult');
     const win = g => { S().gold += g; UI.flashReels(); };
     switch (outcome.id) {
-      case 'coins':   { const g = Utils.randInt(150, 260) * bet; win(g); res.textContent = `🪙 +${Utils.fmt(g)} Gold!`; break; }
-      case 'bag':     { const g = Utils.randInt(550, 800) * bet; win(g); res.textContent = `💰 Big Bag! +${Utils.fmt(g)} Gold!`; break; }
-      case 'jackpot': { const g = 3000 * bet; win(g); res.textContent = `💎 JACKPOT! +${Utils.fmt(g)} Gold!`; UI.confetti(); Social.log('💎', `Jackpot +${Utils.fmt(g)} Gold`); break; }
-      case 'energy':  { const e = 25 * bet; Energy.add(e); UI.flashReels(); res.textContent = `⚡ +${e} Energy!`; break; }
+      case 'coins':   { const g = Utils.randInt(50, 90) * bet; win(g); res.textContent = `🪙 +${Utils.fmt(g)} Gold!`; break; }
+      case 'bag':     { const g = Utils.randInt(180, 260) * bet; win(g); res.textContent = `💰 Big Bag! +${Utils.fmt(g)} Gold!`; break; }
+      case 'jackpot': { const g = 1000 * bet; win(g); res.textContent = `💎 JACKPOT! +${Utils.fmt(g)} Gold!`; UI.confetti(); Social.log('💎', `Jackpot +${Utils.fmt(g)} Gold`); break; }
+      case 'energy':  { const e = 3 * bet; Energy.add(e); UI.flashReels(); res.textContent = `⚡ +${e} Energy!`; break; }
       case 'egg':     { UI.flashReels(); res.textContent = '🥚 Free Egg!'; Shop.openEgg(true); break; }
       case 'raid':    { UI.flashReels(); res.textContent = '⚔️ RAID TIME!'; await Raid.start(bet); break; }
       default:        res.textContent = 'So close... spin again! 🌴';
