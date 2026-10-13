@@ -5,209 +5,66 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#0ea5e9" />
   <title>Pocket Island Master</title>
-  <meta name="description" content="Pocket Island Master — a 100% free-to-play island creature collecting game. No ads, no purchases." />
-  <!-- Tailwind CSS (Play CDN) — works directly on GitHub Pages, no build step needed -->
+  <meta name="description" content="Pocket Island Master — free-to-play island creature game with real players. No ads, no purchases." />
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&display=swap" rel="stylesheet" />
-
-  <style>
-    /* ==========================================================
-       GLOBAL / ISLAND AESTHETIC
-       ========================================================== */
-    :root { --safe-b: env(safe-area-inset-bottom, 0px); }
-    * { -webkit-tap-highlight-color: transparent; }
-    html, body { height: 100%; }
-    body {
-      font-family: 'Baloo 2', system-ui, sans-serif;
-      touch-action: manipulation;
-      background:
-        radial-gradient(circle at 85% 8%, #fff7ae 0 40px, rgba(255,247,174,.35) 41px 70px, transparent 71px),
-        linear-gradient(180deg, #38bdf8 0%, #7dd3fc 35%, #22d3ee 62%, #0891b2 100%);
-      background-attachment: fixed;
-      color: #0f172a;
-      overscroll-behavior: none;
-    }
-    /* Animated sea waves at the bottom of the screen */
-    .waves {
-      position: fixed; left: 0; right: 0; bottom: 0; height: 120px; z-index: 0; pointer-events: none;
-      background:
-        radial-gradient(ellipse 60px 14px at 30px 14px, rgba(255,255,255,.45) 98%, transparent 100%) repeat-x;
-      background-size: 120px 28px;
-      animation: waves 6s linear infinite; opacity: .55;
-    }
-    @keyframes waves { to { background-position: 120px 0; } }
-
-    .glass { background: rgba(255,255,255,.82); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
-    .panel { background: rgba(255,255,255,.9); border-radius: 22px; box-shadow: 0 8px 24px rgba(8,47,73,.18); }
-    .btn {
-      font-weight: 800; border-radius: 16px; padding: .65rem 1rem; transition: transform .08s, filter .15s;
-      box-shadow: 0 4px 0 rgba(0,0,0,.18); user-select: none;
-    }
-    .btn:active:not(:disabled) { transform: translateY(3px); box-shadow: 0 1px 0 rgba(0,0,0,.18); }
-    .btn:disabled { filter: grayscale(.8) brightness(.95); opacity: .65; cursor: not-allowed; }
-    .tab-btn.active { color: #0369a1; }
-    .tab-btn.active .tab-ico { transform: translateY(-4px) scale(1.15); }
-    .tab-ico { transition: transform .2s; display: inline-block; }
-    .hidden-tab { display: none !important; }
-
-    /* Energy bar shimmer */
-    .energy-fill { background: linear-gradient(90deg, #facc15, #fb923c, #facc15); background-size: 200% 100%; animation: shimmer 2.5s linear infinite; transition: width .4s; }
-    .energy-fill.over { background: linear-gradient(90deg, #a78bfa, #f472b6, #a78bfa); background-size: 200% 100%; }
-    @keyframes shimmer { to { background-position: -200% 0; } }
-
-    /* ==========================================================
-       SLOT MACHINE
-       ========================================================== */
-    .slot-frame {
-      background: linear-gradient(180deg, #f59e0b, #b45309);
-      border-radius: 28px; padding: 14px; box-shadow: inset 0 3px 0 rgba(255,255,255,.5), 0 10px 25px rgba(0,0,0,.25);
-    }
-    .reel {
-      background: linear-gradient(180deg, #e2e8f0 0%, #fff 30%, #fff 70%, #e2e8f0 100%);
-      border-radius: 18px; height: 96px; display: flex; align-items: center; justify-content: center;
-      font-size: 54px; box-shadow: inset 0 4px 10px rgba(0,0,0,.25); overflow: hidden;
-    }
-    .reel.spinning .sym { filter: blur(2px); transform: translateY(6px); }
-    .reel.stop .sym { animation: reelStop .35s ease-out; }
-    @keyframes reelStop { 0%{transform:translateY(-30px)} 60%{transform:translateY(8px)} 100%{transform:translateY(0)} }
-    .slot-win { animation: winPulse .6s ease-in-out 3; }
-    @keyframes winPulse { 50% { box-shadow: 0 0 0 6px #fde047, 0 0 30px #fde047; } }
-    .bulb { width: 10px; height: 10px; border-radius: 50%; background: #fef08a; box-shadow: 0 0 8px #fde047; animation: blink 1s infinite; }
-    .bulb:nth-child(even) { animation-delay: .5s; }
-    @keyframes blink { 50% { opacity: .25; } }
-
-    /* ==========================================================
-       CREATURE CARDS + TIER VISUALS
-       1★ base | 2★ larger badge | 3★ shiny palette | 4★ neon animated border | 5★ cosmic particles
-       ========================================================== */
-    .ccard { position: relative; border-radius: 16px; padding: 2px; background: rgba(255,255,255,.9); cursor: pointer; transition: transform .12s; }
-    .ccard:active { transform: scale(.95); }
-    .ccard-in {
-      position: relative; overflow: hidden; border-radius: 14px; height: 100%;
-      background: linear-gradient(160deg, var(--c1), var(--c2));
-      display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 6px 2px 4px;
-      color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,.35); min-height: 86px;
-    }
-    .ccard .emo { font-size: 30px; line-height: 1.1; filter: drop-shadow(0 2px 2px rgba(0,0,0,.3)); position: relative; z-index: 2; }
-    .ccard .nm { font-size: 10px; font-weight: 800; line-height: 1; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; position: relative; z-index: 2; }
-    .ccard .stars { font-size: 9px; color: #fde047; letter-spacing: -1px; position: relative; z-index: 2; }
-    .ccard .elem { position: absolute; top: 2px; left: 4px; font-size: 10px; z-index: 2; }
-    .ccard .cnt { position: absolute; top: 2px; right: 3px; font-size: 10px; font-weight: 800; background: rgba(0,0,0,.45); border-radius: 8px; padding: 0 5px; z-index: 3; }
-    .ccard.locked .ccard-in { background: linear-gradient(160deg, #cbd5e1, #94a3b8); }
-    .ccard.locked .emo { filter: grayscale(1) opacity(.5); }
-    .ccard.faded { opacity: .45; }
-    .ccard.selected { box-shadow: 0 0 0 3px #fff, 0 0 0 6px #0ea5e9; transform: scale(1.05); }
-    .ccard.merge-flash { animation: mergeFlash .6s; }
-    @keyframes mergeFlash { 0%{transform:scale(1)} 40%{transform:scale(1.25); filter:brightness(2)} 100%{transform:scale(1)} }
-
-    /* 2★ — Larger size badge */
-    .tier-2 .stars, .tier-3 .stars, .tier-4 .stars, .tier-5 .stars {
-      font-size: 12px; background: rgba(0,0,0,.4); border-radius: 999px; padding: 0 6px; margin-top: 2px;
-      box-shadow: 0 0 0 1px rgba(253,224,71,.6);
-    }
-    .tier-2 .emo { font-size: 33px; }
-
-    /* 3★ — Shiny palette variation (hue shift + sparkle sweep) */
-    .tier-3 .ccard-in, .tier-4 .ccard-in { filter: hue-rotate(150deg) saturate(1.35); }
-    .tier-3 .emo, .tier-4 .emo { filter: hue-rotate(-150deg) saturate(1.5) drop-shadow(0 0 6px #fff); } /* keep emoji readable, add shine */
-    .tier-3 .ccard-in::after, .tier-4 .ccard-in::after {
-      content: ''; position: absolute; inset: 0; z-index: 1;
-      background: linear-gradient(115deg, transparent 30%, rgba(255,255,255,.65) 48%, transparent 66%);
-      background-size: 250% 100%; animation: sheen 2.6s ease-in-out infinite;
-    }
-    @keyframes sheen { 0%{background-position: 150% 0} 100%{background-position: -100% 0} }
-    .tier-3 .emo { font-size: 34px; }
-
-    /* 4★ — Neon glow + animated border */
-    .tier-4 { padding: 3px; background: linear-gradient(90deg, #22d3ee, #e879f9, #facc15, #22d3ee); background-size: 300% 100%; animation: neonBorder 2.5s linear infinite; box-shadow: 0 0 12px #e879f9, 0 0 22px rgba(34,211,238,.6); }
-    @keyframes neonBorder { to { background-position: 300% 0; } }
-    .tier-4 .emo { font-size: 35px; }
-
-    /* 5★ — Cosmic / mystic particle field */
-    .tier-5 { padding: 3px; background: linear-gradient(90deg, #fde047, #a855f7, #f0abfc, #fde047); background-size: 300% 100%; animation: neonBorder 3s linear infinite; box-shadow: 0 0 16px #a855f7, 0 0 30px rgba(253,224,71,.5); }
-    .tier-5 .ccard-in {
-      background:
-        radial-gradient(circle at 30% 25%, rgba(255,255,255,.9) 0 1px, transparent 2px),
-        radial-gradient(circle at 75% 60%, rgba(255,255,255,.8) 0 1px, transparent 2px),
-        radial-gradient(circle at 50% 85%, rgba(255,255,255,.7) 0 1px, transparent 2px),
-        radial-gradient(circle at 50% 45%, color-mix(in srgb, var(--c1) 70%, transparent), transparent 70%),
-        linear-gradient(160deg, #1e1b4b, #4c1d95 55%, #0f172a);
-    }
-    .tier-5 .emo { font-size: 36px; filter: drop-shadow(0 0 8px #f0abfc) drop-shadow(0 0 3px #fff); animation: floaty 2.4s ease-in-out infinite; }
-    @keyframes floaty { 50% { transform: translateY(-3px); } }
-    .pt { position: absolute; bottom: -6px; width: 4px; height: 4px; border-radius: 50%; background: #fff; box-shadow: 0 0 6px #f0abfc, 0 0 10px #a855f7; animation: particle 2.6s linear infinite; z-index: 1; }
-    .pt:nth-child(3n) { background: #fde047; box-shadow: 0 0 6px #fde047; }
-    @keyframes particle { 0%{transform:translateY(0) scale(.6); opacity:0} 15%{opacity:1} 100%{transform:translateY(-95px) scale(1.2); opacity:0} }
-
-    /* ==========================================================
-       EGG / GACHA
-       ========================================================== */
-    .egg { font-size: 84px; display: inline-block; filter: drop-shadow(0 8px 8px rgba(0,0,0,.25)); }
-    .egg.shake { animation: eggShake .25s ease-in-out infinite; }
-    @keyframes eggShake { 0%,100%{transform:rotate(0)} 25%{transform:rotate(-14deg)} 75%{transform:rotate(14deg)} }
-    .pop-in { animation: popIn .45s cubic-bezier(.2,1.6,.4,1); }
-    @keyframes popIn { 0%{transform:scale(.2); opacity:0} 100%{transform:scale(1); opacity:1} }
-    .float-egg { animation: floaty 2.2s ease-in-out infinite; }
-
-    /* ==========================================================
-       MODAL + TOASTS
-       ========================================================== */
-    #modal { transition: opacity .2s; }
-    .sheet { animation: sheetUp .28s cubic-bezier(.2,1.2,.4,1); }
-    @keyframes sheetUp { from { transform: translateY(40px); opacity: 0; } }
-    .toast { animation: toastIn .3s ease-out, toastOut .35s ease-in forwards; animation-delay: 0s, 2.6s; }
-    @keyframes toastIn { from { transform: translateY(-16px); opacity: 0; } }
-    @keyframes toastOut { to { transform: translateY(-16px); opacity: 0; } }
-    .confetti { position: fixed; top: -10px; width: 8px; height: 14px; z-index: 80; pointer-events: none; animation: confetti 1.8s linear forwards; }
-    @keyframes confetti { to { transform: translateY(105vh) rotate(720deg); } }
-
-    .scroll-area { padding-bottom: calc(96px + var(--safe-b)); }
-    .no-scrollbar::-webkit-scrollbar { display: none; }
-  </style>
+  <link rel="stylesheet" href="css/style.css" />
 </head>
 
 <body class="min-h-full">
   <div class="waves"></div>
 
-  <!-- =========================================================
-       TOP BAR — Gold, Energy (X / 2000) with regen countdown, Social button
-       ========================================================= -->
+  <!-- ===================== TOP BAR ===================== -->
   <header class="sticky top-0 z-30 glass shadow-md">
     <div class="max-w-xl mx-auto px-3 pt-2 pb-2">
       <div class="flex items-center justify-between gap-2">
         <h1 class="text-lg font-extrabold leading-none text-sky-800 drop-shadow-sm">🏝️ Pocket Island <span class="text-amber-500">Master</span></h1>
-        <button id="topSocialBtn" class="btn bg-pink-500 text-white text-sm !py-1.5 !px-3 relative">
-          🎟️ Social
-          <span id="socialDot" class="hidden absolute -top-1 -right-1 w-3 h-3 rounded-full bg-yellow-300 ring-2 ring-white"></span>
-        </button>
+        <div class="flex items-center gap-2">
+          <button id="netBadge" class="text-xs font-bold bg-white/80 rounded-full px-2 py-1 shadow-sm max-w-[110px] truncate"></button>
+          <button id="topSocialBtn" class="btn bg-pink-500 text-white text-sm !py-1.5 !px-3 relative">
+            🎟️<span id="socialDot" class="hidden absolute -top-1 -right-1 w-3 h-3 rounded-full bg-yellow-300 ring-2 ring-white"></span>
+          </button>
+        </div>
       </div>
       <div class="mt-2 grid grid-cols-[auto_1fr] gap-2 items-center">
         <div class="flex items-center gap-1 bg-amber-100 rounded-full pl-1 pr-3 py-1 shadow-inner">
           <span class="text-xl">🪙</span><span id="goldText" class="font-extrabold text-amber-700 tabular-nums">0</span>
         </div>
-        <div>
-          <div class="relative h-7 bg-slate-200 rounded-full overflow-hidden shadow-inner">
-            <div id="energyFill" class="energy-fill absolute inset-y-0 left-0 w-0 rounded-full"></div>
-            <div class="absolute inset-0 flex items-center justify-between px-3 text-xs font-extrabold">
-              <span>⚡ <span id="energyText" class="tabular-nums">0 / 2000</span></span>
-              <span id="regenText" class="tabular-nums text-slate-700">+3 in 1:00</span>
-            </div>
+        <div class="relative h-7 bg-slate-200 rounded-full overflow-hidden shadow-inner">
+          <div id="energyFill" class="energy-fill absolute inset-y-0 left-0 w-0 rounded-full"></div>
+          <div class="absolute inset-0 flex items-center justify-between px-3 text-xs font-extrabold">
+            <span>⚡ <span id="energyText" class="tabular-nums">0 / 2000</span></span>
+            <span id="regenText" class="tabular-nums text-slate-700">+3 in 1:00</span>
           </div>
         </div>
       </div>
     </div>
   </header>
 
-  <!-- Toast container -->
   <div id="toasts" class="fixed top-24 left-0 right-0 z-[70] flex flex-col items-center gap-2 pointer-events-none px-4"></div>
 
   <main class="relative z-10 max-w-xl mx-auto px-3 pt-3 scroll-area">
 
-    <!-- =======================================================
-         TAB 1 — SLOT MACHINE & RAIDS
-         ======================================================= -->
-    <section id="tab-slot" data-tab="slot">
+    <!-- ===================== ISLAND (animated village) ===================== -->
+    <section data-tab="island">
+      <div id="scene" class="scene"></div>
+      <div class="panel mt-3 p-3">
+        <div class="flex items-center justify-between">
+          <div id="islandTitle" class="font-extrabold text-sky-800">Island</div>
+          <div id="islandProg" class="text-sm font-extrabold text-amber-600">0/20 ★</div>
+        </div>
+        <div class="h-3 bg-slate-200 rounded-full overflow-hidden mt-1"><div id="islandBar" class="h-full bg-gradient-to-r from-amber-300 to-orange-500 rounded-full transition-all" style="width:0"></div></div>
+        <div id="islandReward" class="text-[11px] text-slate-500 mt-1"></div>
+        <button id="travelBtn" class="hidden btn w-full mt-2 bg-gradient-to-b from-sky-400 to-blue-600 text-white">⛵ Sail to the next island!</button>
+        <div id="buildList" class="space-y-2 mt-2"></div>
+        <div class="text-[11px] text-slate-500 mt-2 text-center">Tap a pet on the island to play with it · your strongest 3 pets defend you in raids</div>
+      </div>
+    </section>
+
+    <!-- ===================== SLOTS & RAIDS ===================== -->
+    <section data-tab="slot" class="hidden-tab">
       <div class="slot-frame">
         <div class="flex justify-between px-2 mb-2"><span class="bulb"></span><span class="bulb"></span><span class="bulb"></span><span class="bulb"></span><span class="bulb"></span><span class="bulb"></span><span class="bulb"></span></div>
         <div class="text-center text-white font-extrabold text-xl drop-shadow mb-2">🎰 LUCKY LAGOON SLOTS</div>
@@ -216,9 +73,8 @@
           <div class="reel"><span class="sym">⚔️</span></div>
           <div class="reel"><span class="sym">💰</span></div>
         </div>
-        <div id="slotResult" class="text-center text-white font-extrabold min-h-[28px] mt-2 drop-shadow">Spin to win Gold or raid an island!</div>
+        <div id="slotResult" class="text-center text-white font-extrabold min-h-[28px] mt-2 drop-shadow">Spin to win Gold or raid a real island!</div>
       </div>
-
       <div class="panel mt-3 p-3">
         <div class="flex items-center justify-between gap-2">
           <div class="text-sm font-bold text-slate-600">Bet multiplier</div>
@@ -232,53 +88,45 @@
           <div class="bg-sky-50 rounded-xl p-1">⚔️⚔️⚔️<br>Raid!</div>
           <div class="bg-sky-50 rounded-xl p-1">⚡⚡⚡<br>Energy</div>
           <div class="bg-sky-50 rounded-xl p-1">🥚🥚🥚<br>Free Egg</div>
-          <div class="bg-sky-50 rounded-xl p-1 col-span-2">Raid = steal Gold + 5% capture chance</div>
+          <div class="bg-sky-50 rounded-xl p-1 col-span-2">Raid a real player: steal Gold + 5% capture</div>
         </div>
       </div>
-
       <div class="panel mt-3 p-3">
-        <div class="font-extrabold text-sky-800 mb-1">⚔️ Recent Raids</div>
+        <div class="font-extrabold text-sky-800 mb-1">⚔️ Raids</div>
         <div id="raidLog" class="space-y-1 text-sm"></div>
       </div>
     </section>
 
-    <!-- =======================================================
-         TAB 2 — CREATURE ISLAND (50 habitats + merge bag)
-         ======================================================= -->
-    <section id="tab-island" data-tab="island" class="hidden-tab">
+    <!-- ===================== PETS (collection + merge) ===================== -->
+    <section data-tab="pets" class="hidden-tab">
       <div class="panel p-3">
         <div class="flex items-center justify-between">
-          <div class="font-extrabold text-sky-800 text-lg">🏝️ My Island</div>
+          <div class="font-extrabold text-sky-800 text-lg">🐾 My Pets</div>
           <div class="text-sm font-bold text-slate-600">Discovered <span id="dexCount" class="text-sky-700">0</span>/50</div>
         </div>
-        <div class="text-xs text-slate-500 mt-1">Avg tier: <b id="avgTier">1.0</b> ★ · Total creatures: <b id="totalCreatures">0</b></div>
+        <div class="text-xs text-slate-500 mt-1">Avg tier: <b id="avgTier">1.0</b> ★ · Total pets: <b id="totalCreatures">0</b></div>
         <div id="setProgress" class="grid grid-cols-5 gap-1 mt-2"></div>
+        <div id="mergeRule" class="text-xs mt-2 bg-amber-50 border border-amber-200 rounded-xl p-2"></div>
       </div>
-
       <div class="panel mt-3 p-3">
-        <div class="flex items-center justify-between mb-2">
-          <div class="font-extrabold text-sky-800">🎒 Creature Bag — tap 2 identical to merge</div>
-        </div>
+        <div class="font-extrabold text-sky-800 mb-2">🎒 Pet Bag</div>
         <div class="flex gap-2 mb-2">
           <button id="autoMergeBtn" class="btn bg-violet-500 text-white text-sm flex-1">✨ Auto-Merge All</button>
           <button id="clearSelBtn" class="btn bg-slate-200 text-slate-700 text-sm">Clear</button>
         </div>
-        <div id="mergeHint" class="text-xs text-slate-500 mb-2">Tap a stack to select it, then tap the same stack again to merge two copies (2 × N★ → 1 × (N+1)★).</div>
+        <div id="mergeHint" class="text-xs text-slate-500 mb-2"></div>
         <div id="bagGrid" class="grid grid-cols-4 sm:grid-cols-5 gap-2"></div>
         <div id="bagEmpty" class="hidden text-center text-slate-500 text-sm py-4">Your bag is empty. Hatch eggs in the Shop or raid islands! 🥚</div>
       </div>
-
       <div id="habitats" class="space-y-3 mt-3"></div>
     </section>
 
-    <!-- =======================================================
-         TAB 3 — SHOP (Egg Gacha + Daily Deals)
-         ======================================================= -->
-    <section id="tab-shop" data-tab="shop" class="hidden-tab">
+    <!-- ===================== SHOP ===================== -->
+    <section data-tab="shop" class="hidden-tab">
       <div class="panel p-4 text-center bg-gradient-to-b from-amber-50 to-white">
         <div class="font-extrabold text-sky-800 text-lg">🥚 Mystery Egg</div>
         <div class="egg float-egg my-2">🥚</div>
-        <div class="text-sm text-slate-600">50% hatch a random 1★ creature · 50% empty</div>
+        <div class="text-sm text-slate-600">50% hatch a random 1★ pet · 50% empty</div>
         <div class="mt-2">
           <div class="text-xs font-bold text-slate-500">Bad-luck protection</div>
           <div id="pityBar" class="flex justify-center gap-1 mt-1"></div>
@@ -287,27 +135,25 @@
         <button id="buyEggBtn" class="btn w-full mt-3 bg-gradient-to-b from-amber-400 to-orange-500 text-white text-xl">Buy Egg · 🪙 <span id="eggPrice">500</span></button>
         <div class="text-xs text-slate-500 mt-2">Eggs opened: <b id="eggsOpened">0</b></div>
       </div>
-
       <div class="panel mt-3 p-3">
         <div class="flex items-center justify-between">
           <div class="font-extrabold text-sky-800">🔥 Daily Deals</div>
           <div class="text-xs font-bold text-slate-500">New deals in <span id="dealsTimer" class="tabular-nums text-pink-600">--:--:--</span></div>
         </div>
-        <div class="text-xs text-slate-500 mb-2">Target exactly the pieces you need for merges.</div>
+        <div class="text-xs text-slate-500 mb-2">Target exactly the pets missing from your set.</div>
         <div id="dealsGrid" class="grid grid-cols-3 gap-2"></div>
       </div>
       <div class="text-center text-xs text-white/90 font-bold mt-3 drop-shadow">💚 100% Free-to-Play · No ads · No real-money purchases</div>
     </section>
 
-    <!-- =======================================================
-         TAB 4 — TOMBOLA & SOCIAL
-         ======================================================= -->
-    <section id="tab-social" data-tab="social" class="hidden-tab">
-      <!-- Tombola -->
-      <div class="panel p-4 bg-gradient-to-br from-fuchsia-50 to-white">
+    <!-- ===================== SOCIAL ===================== -->
+    <section data-tab="social" class="hidden-tab">
+      <div class="panel p-3" id="accountBox"></div>
+
+      <div class="panel mt-3 p-4 bg-gradient-to-br from-fuchsia-50 to-white">
         <div class="flex items-center justify-between">
           <div class="font-extrabold text-fuchsia-700 text-lg">🎟️ Island Tombola</div>
-          <div class="text-xs font-bold text-slate-500">Draw every 5h</div>
+          <div class="text-xs font-bold text-slate-500">Real players · every 5h</div>
         </div>
         <div class="text-center mt-2">
           <div class="text-xs font-bold text-slate-500">Next draw in</div>
@@ -318,15 +164,14 @@
           <div class="bg-white rounded-2xl p-2 shadow-sm"><div class="text-[11px] text-slate-500 font-bold">Pool</div><div id="tombolaPool" class="text-xl font-extrabold">0⚡</div></div>
           <div class="bg-white rounded-2xl p-2 shadow-sm"><div class="text-[11px] text-slate-500 font-bold">Each winner</div><div id="tombolaPrize" class="text-xl font-extrabold text-green-600">0⚡</div></div>
         </div>
-        <div class="text-[11px] text-slate-500 mt-2 text-center">Pool ÷ 3 winners × 10 multiplier. Ticket: 3⚡</div>
+        <div id="tombolaNote" class="text-[11px] text-slate-500 mt-2 text-center"></div>
         <button id="tombolaBtn" class="btn w-full mt-3 bg-gradient-to-b from-fuchsia-500 to-purple-600 text-white text-lg">Buy Ticket · 3⚡</button>
         <div id="tombolaEntrants" class="flex flex-wrap gap-1 mt-3 max-h-24 overflow-y-auto no-scrollbar"></div>
         <div id="tombolaLast" class="mt-3 text-sm"></div>
       </div>
 
-      <!-- Share -->
       <div class="panel mt-3 p-3">
-        <div class="font-extrabold text-sky-800">📣 Share to Friends</div>
+        <div class="font-extrabold text-sky-800">📣 Invite Friends</div>
         <div class="text-xs text-slate-500">+50⚡ bonus · cooldown 2 hours</div>
         <div class="grid grid-cols-2 gap-2 mt-2">
           <button class="btn share-btn bg-green-500 text-white" data-platform="WhatsApp">💬 WhatsApp</button>
@@ -335,1110 +180,54 @@
         <div id="shareTimer" class="text-xs text-center font-bold text-slate-500 mt-2"></div>
       </div>
 
-      <!-- Friends -->
       <div class="panel mt-3 p-3">
         <div class="font-extrabold text-sky-800">🤝 Friends</div>
         <div class="text-xs text-slate-500">Send 10⚡ to each friend once every 12h. Gifts you receive can exceed the 2000 cap!</div>
+        <div id="friendAdd" class="flex gap-2 mt-2">
+          <input id="friendNick" class="input !py-2" placeholder="Friend's nickname" maxlength="16" />
+          <button id="addFriendBtn" class="btn bg-sky-600 text-white text-sm whitespace-nowrap">➕ Add</button>
+        </div>
         <div id="friendsList" class="mt-2 space-y-2"></div>
       </div>
 
-      <!-- Activity / gift log -->
+      <div id="leaderBox" class="panel mt-3 p-3">
+        <div class="font-extrabold text-sky-800 mb-1">🏆 Top Island Masters</div>
+        <div id="leaderList" class="space-y-1"></div>
+      </div>
+
       <div class="panel mt-3 p-3">
-        <div class="font-extrabold text-sky-800 mb-1">📜 Activity & Gift Log</div>
+        <div class="font-extrabold text-sky-800 mb-1">📜 Activity Log</div>
         <div id="activityLog" class="space-y-1 text-sm max-h-72 overflow-y-auto no-scrollbar"></div>
       </div>
 
       <div class="panel mt-3 p-3 text-center">
-        <div class="text-xs text-slate-500">Progress is saved automatically in this browser.</div>
-        <button id="resetBtn" class="btn bg-red-100 text-red-600 text-sm mt-2">Reset game</button>
+        <button id="resetBtn" class="btn bg-red-100 text-red-600 text-sm">Reset game</button>
       </div>
     </section>
   </main>
 
-  <!-- =========================================================
-       BOTTOM NAVIGATION
-       ========================================================= -->
+  <!-- ===================== BOTTOM NAV ===================== -->
   <nav class="fixed bottom-0 left-0 right-0 z-30 glass shadow-[0_-4px_16px_rgba(0,0,0,.12)]" style="padding-bottom: var(--safe-b)">
-    <div class="max-w-xl mx-auto grid grid-cols-4 text-center">
-      <button class="tab-btn active py-2 font-extrabold text-xs text-slate-500" data-target="slot"><span class="tab-ico text-2xl">🎰</span><br>Spin</button>
+    <div class="max-w-xl mx-auto grid grid-cols-5 text-center">
       <button class="tab-btn py-2 font-extrabold text-xs text-slate-500" data-target="island"><span class="tab-ico text-2xl">🏝️</span><br>Island</button>
+      <button class="tab-btn py-2 font-extrabold text-xs text-slate-500" data-target="slot"><span class="tab-ico text-2xl">🎰</span><br>Spin</button>
+      <button class="tab-btn py-2 font-extrabold text-xs text-slate-500" data-target="pets"><span class="tab-ico text-2xl">🐾</span><br>Pets</button>
       <button class="tab-btn py-2 font-extrabold text-xs text-slate-500" data-target="shop"><span class="tab-ico text-2xl">🛒</span><br>Shop</button>
       <button class="tab-btn py-2 font-extrabold text-xs text-slate-500" data-target="social"><span class="tab-ico text-2xl">🎟️</span><br>Social</button>
     </div>
   </nav>
 
-  <!-- Generic modal -->
   <div id="modal" class="fixed inset-0 z-50 hidden items-end sm:items-center justify-center bg-slate-900/60 p-3">
     <div id="modalBody" class="sheet panel w-full max-w-md p-4 max-h-[85vh] overflow-y-auto"></div>
   </div>
 
-<script>
-'use strict';
-/* ============================================================================
-   POCKET ISLAND MASTER
-   100% Free-to-Play island creature game. Vanilla JS (ES6+), no build step.
-
-   Module overview (plain objects, each with a single responsibility):
-     CONFIG      – every tunable number of the economy
-     DATA        – 50 creatures, elements, slot outcomes, bot names
-     Utils       – RNG, formatting, time helpers
-     Store       – game state + localStorage persistence
-     Energy      – cap, passive regen, spending/adding
-     Collection  – inventory, discovery rewards, merges, set completion
-     Slot        – slot machine spins & outcomes
-     Raid        – opponent generation, gold theft, capture + de-level rule
-     Shop        – egg gacha w/ pity timer, daily deals
-     Social      – share bonus, friend gifts, activity log
-     Tombola     – 5-hour lottery with bots and x10 multiplier
-     UI          – rendering, tabs, modals, toasts
-     Game        – boot + 1-second game loop
-   ========================================================================== */
-
-/* ============================== CONFIG ============================== */
-const HOUR = 3600 * 1000;
-const CONFIG = {
-  SAVE_KEY: 'pocketIslandMaster_save_v1',
-  MAX_ENERGY: 2000,                 // hard cap for passive regeneration
-  REGEN_AMOUNT: 3,                  // +3 energy ...
-  REGEN_INTERVAL_MS: 60 * 1000,     // ... every 60 seconds
-  START_ENERGY: 300,
-  START_GOLD: 1500,
-
-  SPIN_COST: 10,                    // energy per spin (x bet multiplier)
-  BETS: [1, 3, 10],
-
-  EGG_PRICE: 500,
-  EGG_HATCH_CHANCE: 0.5,            // 50% hatch / 50% empty
-  PITY_THRESHOLD: 3,                // after 3 empty eggs in a row -> next is guaranteed
-
-  DISCOVERY_ENERGY: 10,             // +10 energy per new species
-  SET_ENERGY_PER_TIER: 100,         // full 50-set at tier T -> 100 x T energy
-  MAX_STARS: 5,
-
-  CAPTURE_CHANCE: 0.05,             // flat 5% capture on raids
-  HIGH_TIER_CAPTURE: 3,             // 3★+ is always "high tier"
-  CAPTURE_COPIES: 3,                // de-level -> THREE 1★ copies
-
-  SHARE_ENERGY: 50,
-  SHARE_COOLDOWN_MS: 2 * HOUR,
-  GIFT_AMOUNT: 10,
-  GIFT_COOLDOWN_MS: 12 * HOUR,
-
-  TOMBOLA_INTERVAL_MS: 5 * HOUR,
-  TOMBOLA_TICKET: 3,
-  TOMBOLA_WINNERS: 3,
-  TOMBOLA_MULT: 10,
-
-  DEAL_COUNT: 3,
-  LOG_LIMIT: 80,
-};
-
-/* =============================== DATA =============================== */
-const DATA = {
-  /** Element palette + biome names for the island habitats */
-  ELEMENTS: {
-    Fire:     { icon: '🔥', c1: '#ffb347', c2: '#ef4444', biome: 'Volcano Ridge' },
-    Water:    { icon: '💧', c1: '#60a5fa', c2: '#1d4ed8', biome: 'Coral Lagoon' },
-    Grass:    { icon: '🍃', c1: '#86efac', c2: '#15803d', biome: 'Jungle Grove' },
-    Electric: { icon: '⚡', c1: '#fde047', c2: '#ea580c', biome: 'Storm Peaks' },
-    Psychic:  { icon: '🔮', c1: '#f5d0fe', c2: '#9333ea', biome: 'Mystic Ruins' },
-  },
-
-  /** 50 original creatures (10 per element), Pokémon GO–inspired style */
-  RAW_CREATURES: {
-    Fire:     [['Embrix','🦊'],['Pyrowl','🦉'],['Cindrake','🐉'],['Blazepup','🐕'],['Magmole','🐹'],['Scorchick','🐤'],['Flarecat','🐈'],['Ignibat','🦇'],['Volcarox','🦏'],['Solmane','🦁']],
-    Water:    [['Aquapup','🦭'],['Bubblefin','🐟'],['Tidalotl','🦎'],['Coralisk','🐚'],['Splashell','🐢'],['Krakenling','🐙'],['Wavewhale','🐳'],['Frostfin','🐧'],['Mistdolph','🐬'],['Pinchwave','🦀']],
-    Grass:    [['Sproutle','🌱'],['Mossaur','🦕'],['Thornhog','🦔'],['Leafawn','🦌'],['Vinesnek','🐍'],['Bloomby','🐝'],['Caterleaf','🐛'],['Oakling','🌳'],['Shroomp','🍄'],['Lilyhop','🐸']],
-    Electric: [['Voltmouse','🐭'],['Sparkit','🐰'],['Joltwing','🦅'],['Shockshark','🦈'],['Statikket','🦗'],['Thundox','🐺'],['Boltigon','🐯'],['Plasmoth','🦋'],['Voltgator','🐊'],['Kangazap','🦘']],
-    Psychic:  [['Mindmew','🐱'],['Unimystic','🦄'],['Dreamlamb','🐑'],['Oracub','🐻'],['Zenpanda','🐼'],['Astrabbit','🐇'],['Peacosmic','🦚'],['Hypnosnail','🐌'],['Telepup','🐩'],['Auraloth','🦥']],
-  },
-
-  /**
-   * Slot outcomes. `weight` = relative probability. `reels` = the three symbols shown.
-   * Gold amounts are multiplied by the bet.
-   */
-  SLOT_OUTCOMES: [
-    { id: 'coins',   weight: 34, sym: '🪙' },
-    { id: 'bag',     weight: 13, sym: '💰' },
-    { id: 'jackpot', weight: 2,  sym: '💎' },
-    { id: 'raid',    weight: 18, sym: '⚔️' },
-    { id: 'energy',  weight: 10, sym: '⚡' },
-    { id: 'egg',     weight: 4,  sym: '🥚' },
-    { id: 'miss',    weight: 19, sym: null },
-  ],
-  SLOT_SYMBOLS: ['🪙', '💰', '💎', '⚔️', '⚡', '🥚', '🍒', '🌴'],
-
-  FRIENDS: [
-    { id: 'f1', name: 'Luna Reef',   avatar: '🧜‍♀️' },
-    { id: 'f2', name: 'Captain Max', avatar: '🏴‍☠️' },
-    { id: 'f3', name: 'Coco Banana', avatar: '🐵' },
-    { id: 'f4', name: 'Sunny Shell', avatar: '🐚' },
-    { id: 'f5', name: 'Tiki Tom',    avatar: '🗿' },
-    { id: 'f6', name: 'Marina V.',   avatar: '🌊' },
-  ],
-
-  BOT_NAMES: ['Aria','Bogdan','Chen','Dana','Eli','Fynn','Gabi','Hiro','Ioana','Jade','Kai','Lia','Mihai','Nora','Omar','Pia','Quinn','Rami','Sara','Toma','Uma','Vlad','Wren','Xena','Yuki','Zara','Andrei','Bea','Cris','Dora','Emil','Flo','Geo','Hana','Ion','Juno','Kira','Leo','Maya','Nico','Oana','Paul','Rita','Sami','Tara','Vera','Will','Zoe','Radu','Ema'],
-  ISLAND_NAMES: ['Palm Paradise','Skull Atoll','Mango Key','Shark Bay','Pearl Cove','Thunder Isle','Moonlit Sands','Coral Kingdom','Lava Lagoon','Coconut Cay'],
-};
-
-/** Build the final 50-creature list with stable ids 0..49 */
-const CREATURES = Object.entries(DATA.RAW_CREATURES).flatMap(([element, list]) =>
-  list.map(([name, emoji]) => ({ element, name, emoji }))
-).map((c, id) => ({ ...c, id }));
-
-/* =============================== UTILS =============================== */
-const Utils = {
-  /** Deterministic RNG so daily deals / tombola bots are identical across reloads */
-  seeded(seed) {
-    let a = seed >>> 0;
-    return () => {
-      a = (a + 0x6D2B79F5) | 0;
-      let t = Math.imul(a ^ (a >>> 15), 1 | a);
-      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-    };
-  },
-  hash(str) { let h = 2166136261; for (const ch of str) { h ^= ch.charCodeAt(0); h = Math.imul(h, 16777619); } return h >>> 0; },
-  rand(min, max) { return min + Math.random() * (max - min); },
-  randInt(min, max) { return Math.floor(Utils.rand(min, max + 1)); },
-  pick(arr, rng = Math.random) { return arr[Math.floor(rng() * arr.length)]; },
-  weighted(items, rng = Math.random) {
-    const total = items.reduce((s, i) => s + i.weight, 0);
-    let r = rng() * total;
-    for (const i of items) { if ((r -= i.weight) < 0) return i; }
-    return items[items.length - 1];
-  },
-  fmt(n) { return Math.floor(n).toLocaleString('en-US'); },
-  /** ms -> "h:mm:ss" or "m:ss" */
-  time(ms) {
-    ms = Math.max(0, ms); const s = Math.ceil(ms / 1000);
-    const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sec = s % 60;
-    const pad = v => String(v).padStart(2, '0');
-    return h > 0 ? `${h}:${pad(m)}:${pad(sec)}` : `${m}:${pad(sec)}`;
-  },
-  dayKey(d = new Date()) { return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`; },
-  msToMidnight() { const n = new Date(); const m = new Date(n); m.setHours(24, 0, 0, 0); return m - n; },
-  sleep(ms) { return new Promise(r => setTimeout(r, ms)); },
-  clock(ts) { return new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }); },
-};
-
-/* =============================== STORE =============================== */
-const Store = {
-  state: null,
-
-  /** Fresh save for a brand-new player */
-  defaults() {
-    const now = Date.now();
-    return {
-      version: 1,
-      energy: CONFIG.START_ENERGY,
-      gold: CONFIG.START_GOLD,
-      lastRegenAt: now,
-      bet: 1,
-      inventory: {},          // "speciesId:stars" -> count
-      discovered: {},         // speciesId -> timestamp of first discovery
-      maxStar: {},            // speciesId -> highest star ever reached (for set completion)
-      setClaims: {},          // tier -> true once the 50-set reward was paid
-      pity: 0,                // consecutive empty eggs
-      eggsOpened: 0,
-      deals: { day: '', items: [], bought: [] },
-      shareReadyAt: 0,
-      friends: DATA.FRIENDS.map(f => ({ id: f.id, lastSentAt: 0 })),
-      pendingGifts: [],       // simulated incoming gifts: { at, friendId }
-      nextRandomGiftAt: now + Utils.rand(15, 45) * 60 * 1000,
-      tombola: { entered: {}, lastResult: null, lastCheckedRound: Tombola.roundId(now) },
-      raids: [],              // recent raid summaries
-      log: [],                // activity log
-      stats: { spins: 0, raids: 0, captures: 0 },
-    };
-  },
-
-  load() {
-    try {
-      const raw = localStorage.getItem(CONFIG.SAVE_KEY);
-      if (raw) {
-        // Merge onto defaults so new fields added in updates never break old saves
-        this.state = Object.assign(this.defaults(), JSON.parse(raw));
-        return;
-      }
-    } catch (e) { console.warn('Save corrupted, starting fresh.', e); }
-    this.state = this.defaults();
-  },
-
-  save() {
-    try { localStorage.setItem(CONFIG.SAVE_KEY, JSON.stringify(this.state)); }
-    catch (e) { console.warn('Could not save', e); }
-  },
-
-  reset() { localStorage.removeItem(CONFIG.SAVE_KEY); this.state = this.defaults(); this.save(); },
-};
-const S = () => Store.state;   // short accessor
-
-/* =============================== ENERGY =============================== */
-const Energy = {
-  /**
-   * Add energy. Normal rewards are clamped at the 2000 cap (but never reduce energy
-   * that is already above it). Friend gifts & tombola prizes pass bypassCap=true.
-   */
-  add(amount, bypassCap = false) {
-    const st = S();
-    if (bypassCap) st.energy += amount;
-    else st.energy = Math.max(st.energy, Math.min(CONFIG.MAX_ENERGY, st.energy + amount));
-  },
-  spend(amount) {
-    if (S().energy < amount) return false;
-    S().energy -= amount;
-    return true;
-  },
-  /** Passive regeneration: +3 per full minute elapsed (works offline too). */
-  regen(now) {
-    const st = S();
-    if (st.energy >= CONFIG.MAX_ENERGY) { st.lastRegenAt = now; return; }
-    const ticks = Math.floor((now - st.lastRegenAt) / CONFIG.REGEN_INTERVAL_MS);
-    if (ticks > 0) {
-      st.energy = Math.min(CONFIG.MAX_ENERGY, st.energy + ticks * CONFIG.REGEN_AMOUNT);
-      st.lastRegenAt += ticks * CONFIG.REGEN_INTERVAL_MS;
-      if (st.energy >= CONFIG.MAX_ENERGY) st.lastRegenAt = now;
-    }
-  },
-  msToNext(now) { return CONFIG.REGEN_INTERVAL_MS - (now - S().lastRegenAt); },
-};
-
-/* ============================= COLLECTION ============================= */
-const Collection = {
-  key: (id, stars) => `${id}:${stars}`,
-  count(id, stars) { return S().inventory[this.key(id, stars)] || 0; },
-  setCount(id, stars, n) {
-    const k = this.key(id, stars);
-    if (n <= 0) delete S().inventory[k]; else S().inventory[k] = n;
-  },
-
-  /** All owned stacks as [{id, stars, count}] sorted by species then tier */
-  stacks() {
-    return Object.entries(S().inventory)
-      .map(([k, count]) => { const [id, stars] = k.split(':').map(Number); return { id, stars, count }; })
-      .filter(s => s.count > 0)
-      .sort((a, b) => a.id - b.id || b.stars - a.stars);
-  },
-
-  total() { return this.stacks().reduce((s, x) => s + x.count, 0); },
-
-  /** Average star tier over every creature owned (1 if empty) */
-  averageTier() {
-    let n = 0, sum = 0;
-    for (const s of this.stacks()) { n += s.count; sum += s.count * s.stars; }
-    return n ? sum / n : 1;
-  },
-
-  /** Highest tier currently owned for a species (0 = none) */
-  bestOwned(id) {
-    for (let t = CONFIG.MAX_STARS; t >= 1; t--) if (this.count(id, t) > 0) return t;
-    return 0;
-  },
-
-  /**
-   * Add a creature to the bag. Handles discovery (+10 energy) and set-completion checks.
-   * Returns { isNew } for UI feedback.
-   */
-  add(id, stars = 1, qty = 1) {
-    const st = S();
-    this.setCount(id, stars, this.count(id, stars) + qty);
-    let isNew = false;
-    if (!st.discovered[id]) {
-      st.discovered[id] = Date.now();
-      isNew = true;
-      Energy.add(CONFIG.DISCOVERY_ENERGY);
-      UI.toast(`🆕 New discovery: ${CREATURES[id].emoji} ${CREATURES[id].name}! +${CONFIG.DISCOVERY_ENERGY}⚡`, 'green');
-      Social.log('🆕', `Discovered ${CREATURES[id].name} (+${CONFIG.DISCOVERY_ENERGY}⚡)`);
-    }
-    this.reachTier(id, stars);
-    return { isNew };
-  },
-
-  /** Track the highest tier ever reached (sets count "has reached tier T") */
-  reachTier(id, stars) {
-    const st = S();
-    if ((st.maxStar[id] || 0) < stars) st.maxStar[id] = stars;
-    this.checkSets();
-  },
-
-  /** Number of species that reached at least tier t */
-  setProgress(t) { return CREATURES.filter(c => (S().maxStar[c.id] || 0) >= t).length; },
-
-  /** Completing all 50 at tier T pays 100 x T energy (once per tier) */
-  checkSets() {
-    const st = S();
-    for (let t = 1; t <= CONFIG.MAX_STARS; t++) {
-      if (!st.setClaims[t] && this.setProgress(t) === CREATURES.length) {
-        st.setClaims[t] = true;
-        const reward = CONFIG.SET_ENERGY_PER_TIER * t;
-        Energy.add(reward);
-        UI.toast(`🏆 FULL ${t}★ SET COMPLETE! +${reward}⚡`, 'gold');
-        UI.confetti();
-        Social.log('🏆', `Completed all 50 at ${t}★ (+${reward}⚡)`);
-      }
-    }
-  },
-
-  /** Merge TWO identical (same species, same tier) into ONE of the next tier */
-  merge(id, stars) {
-    if (stars >= CONFIG.MAX_STARS) { UI.toast('5★ is the maximum tier!', 'red'); return false; }
-    if (this.count(id, stars) < 2) { UI.toast('You need two identical copies to merge.', 'red'); return false; }
-    this.setCount(id, stars, this.count(id, stars) - 2);
-    this.setCount(id, stars + 1, this.count(id, stars + 1) + 1);
-    this.reachTier(id, stars + 1);
-    return true;
-  },
-
-  /** Merge every possible pair, cascading from 1★ upward. Returns number of merges. */
-  autoMergeAll() {
-    let merges = 0;
-    for (let t = 1; t < CONFIG.MAX_STARS; t++) {
-      for (const c of CREATURES) {
-        while (this.count(c.id, t) >= 2) { this.merge(c.id, t); merges++; }
-      }
-    }
-    return merges;
-  },
-
-  randomSpecies() { return Utils.pick(CREATURES).id; },
-};
-
-/* ================================ SLOT ================================ */
-const Slot = {
-  spinning: false,
-
-  /** Build the 3 reel symbols for an outcome (miss = never three of a kind) */
-  reelsFor(outcome) {
-    if (outcome.sym) return [outcome.sym, outcome.sym, outcome.sym];
-    let r;
-    do { r = [0, 0, 0].map(() => Utils.pick(DATA.SLOT_SYMBOLS)); } while (r[0] === r[1] && r[1] === r[2]);
-    return r;
-  },
-
-  async spin() {
-    if (this.spinning) return;
-    const st = S();
-    const cost = CONFIG.SPIN_COST * st.bet;
-    if (!Energy.spend(cost)) { UI.toast(`Not enough energy! Need ${cost}⚡`, 'red'); return; }
-
-    this.spinning = true;
-    st.stats.spins++;
-    UI.renderTop(); UI.setSpinEnabled(false);
-    UI.el('slotResult').textContent = 'Spinning...';
-
-    const outcome = Utils.weighted(DATA.SLOT_OUTCOMES);
-    await UI.animateReels(this.reelsFor(outcome));
-    this.resolve(outcome, st.bet);
-
-    this.spinning = false;
-    UI.setSpinEnabled(true);
-    Store.save();
-  },
-
-  /** Apply the reward of a spin outcome */
-  resolve(outcome, bet) {
-    const res = UI.el('slotResult');
-    const win = g => { S().gold += g; UI.flashReels(); };
-    switch (outcome.id) {
-      case 'coins':   { const g = Utils.randInt(150, 260) * bet; win(g); res.textContent = `🪙 +${Utils.fmt(g)} Gold!`; break; }
-      case 'bag':     { const g = Utils.randInt(550, 800) * bet; win(g); res.textContent = `💰 Big Bag! +${Utils.fmt(g)} Gold!`; break; }
-      case 'jackpot': { const g = 3000 * bet; win(g); res.textContent = `💎 JACKPOT! +${Utils.fmt(g)} Gold!`; UI.confetti(); Social.log('💎', `Jackpot +${Utils.fmt(g)} Gold`); break; }
-      case 'energy':  { const e = 25 * bet; Energy.add(e); UI.flashReels(); res.textContent = `⚡ +${e} Energy!`; break; }
-      case 'egg':     { UI.flashReels(); res.textContent = '🥚 Free Egg!'; Shop.openEgg(true); break; }
-      case 'raid':    { UI.flashReels(); res.textContent = '⚔️ RAID TIME!'; Raid.start(bet); break; }
-      default:        res.textContent = 'So close... spin again! 🌴';
-    }
-    UI.renderTop();
-  },
-};
-
-/* ================================ RAID ================================ */
-const Raid = {
-  /** Simulated opponent island with gold and 3 active creatures */
-  makeOpponent() {
-    const pets = [0, 1, 2].map(() => ({
-      id: Collection.randomSpecies(),
-      stars: Utils.weighted([{ s: 1, weight: 35 }, { s: 2, weight: 28 }, { s: 3, weight: 20 }, { s: 4, weight: 11 }, { s: 5, weight: 6 }]).s,
-    }));
-    return {
-      owner: Utils.pick(DATA.BOT_NAMES),
-      island: Utils.pick(DATA.ISLAND_NAMES),
-      gold: Utils.randInt(3000, 25000),
-      pets,
-    };
-  },
-
-  async start(bet) {
-    const st = S();
-    const opp = this.makeOpponent();
-    st.stats.raids++;
-
-    // --- Gold theft: 10–30% of target's gold, scaled by bet, never more than they have
-    const stolen = Math.min(opp.gold, Math.floor(opp.gold * Utils.rand(0.10, 0.30) * Math.max(1, bet / 2)));
-    st.gold += stolen;
-
-    // --- Capture: flat 5% chance to take one of their active creatures
-    let capture = null;
-    if (Math.random() < CONFIG.CAPTURE_CHANCE) {
-      const pet = Utils.pick(opp.pets);
-      const avg = Collection.averageTier();
-      // De-level rule: higher than our average tier OR any 3★+ -> THREE 1★ copies
-      const delevel = pet.stars > avg || pet.stars >= CONFIG.HIGH_TIER_CAPTURE;
-      if (delevel) Collection.add(pet.id, 1, CONFIG.CAPTURE_COPIES);
-      else Collection.add(pet.id, pet.stars, 1);
-      capture = { ...pet, delevel };
-      st.stats.captures++;
-    }
-
-    // --- Record & show
-    const name = `${opp.owner}'s ${opp.island}`;
-    const capText = capture
-      ? (capture.delevel
-          ? `captured ${CREATURES[capture.id].name} ${capture.stars}★ → 3× 1★`
-          : `captured ${CREATURES[capture.id].name} ${capture.stars}★`)
-      : '';
-    st.raids.unshift({ t: Date.now(), name, stolen, capText });
-    st.raids = st.raids.slice(0, 8);
-    Social.log('⚔️', `Raided ${name}: +${Utils.fmt(stolen)} Gold${capText ? ' · ' + capText : ''}`);
-
-    UI.showRaid(opp, stolen, capture);
-    UI.renderTop(); UI.renderRaidLog();
-    Store.save();
-  },
-};
-
-/* ================================ SHOP ================================ */
-const Shop = {
-  buyEgg() {
-    const st = S();
-    if (st.gold < CONFIG.EGG_PRICE) { UI.toast(`Not enough Gold! Need ${CONFIG.EGG_PRICE} 🪙`, 'red'); return; }
-    st.gold -= CONFIG.EGG_PRICE;
-    UI.renderTop();
-    this.openEgg(false);
-  },
-
-  /**
-   * Gacha roll with pity timer:
-   *  - 50% hatch / 50% empty
-   *  - after PITY_THRESHOLD (3) empties in a row, the next egg is 100% guaranteed
-   *  - pity resets on any successful hatch
-   */
-  openEgg(free) {
-    const st = S();
-    st.eggsOpened++;
-    const guaranteed = st.pity >= CONFIG.PITY_THRESHOLD;
-    const hatched = guaranteed || Math.random() < CONFIG.EGG_HATCH_CHANCE;
-    let id = null, isNew = false;
-    if (hatched) {
-      id = Collection.randomSpecies();
-      st.pity = 0;
-      isNew = !st.discovered[id];
-    } else {
-      st.pity++;
-    }
-    Store.save();
-    UI.showEgg({ hatched, id, guaranteed, free, isNew });
-  },
-
-  /** 3 rotating deals, re-rolled daily (deterministic per calendar day) */
-  deals() {
-    const st = S();
-    const day = Utils.dayKey();
-    if (st.deals.day !== day) {
-      const rng = Utils.seeded(Utils.hash('deals-' + day));
-      const ids = new Set();
-      while (ids.size < CONFIG.DEAL_COUNT) ids.add(Math.floor(rng() * CREATURES.length));
-      st.deals = {
-        day,
-        items: [...ids].map(id => ({ id, price: Math.round((4000 + rng() * 6000) / 100) * 100 })),
-        bought: [],
-      };
-      Store.save();
-    }
-    return st.deals;
-  },
-
-  buyDeal(idx) {
-    const st = S(); const d = this.deals(); const item = d.items[idx];
-    if (!item || d.bought.includes(idx)) return;
-    if (st.gold < item.price) { UI.toast(`Not enough Gold! Need ${Utils.fmt(item.price)} 🪙`, 'red'); return; }
-    st.gold -= item.price;
-    d.bought.push(idx);
-    Collection.add(item.id, 1);
-    UI.toast(`Bought ${CREATURES[item.id].emoji} ${CREATURES[item.id].name} 1★!`, 'green');
-    Social.log('🛒', `Bought deal: ${CREATURES[item.id].name} for ${Utils.fmt(item.price)} Gold`);
-    Store.save(); UI.renderAll();
-  },
-};
-
-/* =============================== SOCIAL =============================== */
-const Social = {
-  /** Append to the activity log (newest first) */
-  log(icon, text) {
-    const st = S();
-    st.log.unshift({ t: Date.now(), icon, text });
-    st.log = st.log.slice(0, CONFIG.LOG_LIMIT);
-  },
-
-  /** Simulated share: +50 energy, 2h cooldown */
-  share(platform) {
-    const st = S(); const now = Date.now();
-    if (now < st.shareReadyAt) { UI.toast(`Share ready in ${Utils.time(st.shareReadyAt - now)}`, 'red'); return; }
-    st.shareReadyAt = now + CONFIG.SHARE_COOLDOWN_MS;
-    Energy.add(CONFIG.SHARE_ENERGY);
-    UI.toast(`Shared to ${platform}! +${CONFIG.SHARE_ENERGY}⚡`, 'green');
-    this.log('📣', `Shared to ${platform} (+${CONFIG.SHARE_ENERGY}⚡)`);
-    Store.save(); UI.renderAll();
-  },
-
-  /** Send 10 energy to a friend (free for you, once per 12h per friend) */
-  sendGift(friendId) {
-    const st = S(); const now = Date.now();
-    const f = st.friends.find(x => x.id === friendId);
-    if (!f || now - f.lastSentAt < CONFIG.GIFT_COOLDOWN_MS) return;
-    f.lastSentAt = now;
-    const info = DATA.FRIENDS.find(x => x.id === friendId);
-    this.log('🎁', `You sent ${CONFIG.GIFT_AMOUNT}⚡ to ${info.name}`);
-    UI.toast(`Sent ${CONFIG.GIFT_AMOUNT}⚡ to ${info.name}!`, 'green');
-    // Simulated friend: 70% chance they gift you back within 1–8 minutes
-    if (Math.random() < 0.7) st.pendingGifts.push({ at: now + Utils.rand(1, 8) * 60 * 1000, friendId });
-    Store.save(); UI.renderSocial();
-  },
-
-  /** Deliver simulated incoming gifts (bypass the 2000 cap) */
-  processIncoming(now) {
-    const st = S(); let changed = false;
-    const receive = friendId => {
-      const info = DATA.FRIENDS.find(x => x.id === friendId);
-      Energy.add(CONFIG.GIFT_AMOUNT, true);
-      this.log('💝', `${info.name} sent you ${CONFIG.GIFT_AMOUNT}⚡`);
-      UI.toast(`${info.avatar} ${info.name} sent you ${CONFIG.GIFT_AMOUNT}⚡!`, 'pink');
-      changed = true;
-    };
-    const due = st.pendingGifts.filter(g => g.at <= now);
-    st.pendingGifts = st.pendingGifts.filter(g => g.at > now);
-    due.forEach(g => receive(g.friendId));
-    if (now >= st.nextRandomGiftAt) {               // spontaneous gift every 20–60 min
-      receive(Utils.pick(DATA.FRIENDS).id);
-      st.nextRandomGiftAt = now + Utils.rand(20, 60) * 60 * 1000;
-    }
-    return changed;
-  },
-};
-
-/* =============================== TOMBOLA =============================== */
-const Tombola = {
-  roundId(now = Date.now()) { return Math.floor(now / CONFIG.TOMBOLA_INTERVAL_MS); },
-  roundEnd(r) { return (r + 1) * CONFIG.TOMBOLA_INTERVAL_MS; },
-
-  /** Total bots that will have entered round r by draw time (deterministic) */
-  maxBots(r) { return 12 + Math.floor(Utils.seeded(r * 9973)() * 40); },
-
-  /** Bots that have joined so far — the pool grows during the round */
-  botsNow(r, now = Date.now()) {
-    const progress = 1 - (this.roundEnd(r) - now) / CONFIG.TOMBOLA_INTERVAL_MS;
-    return Math.max(2, Math.floor(this.maxBots(r) * Math.min(1, progress / 0.85 + 0.05)));
-  },
-  botName(r, i) { return DATA.BOT_NAMES[(Utils.hash(`${r}-${i}`)) % DATA.BOT_NAMES.length]; },
-
-  entered(r = this.roundId()) { return !!S().tombola.entered[r]; },
-
-  /** Live numbers for the current round */
-  current(now = Date.now()) {
-    const r = this.roundId(now);
-    const players = this.botsNow(r, now) + (this.entered(r) ? 1 : 0);
-    const pool = players * CONFIG.TOMBOLA_TICKET;
-    const prize = Math.floor(pool / CONFIG.TOMBOLA_WINNERS) * CONFIG.TOMBOLA_MULT;
-    return { r, players, pool, prize, msLeft: this.roundEnd(r) - now };
-  },
-
-  buyTicket() {
-    const r = this.roundId();
-    if (this.entered(r)) { UI.toast('You already have a ticket for this draw!', 'red'); return; }
-    if (!Energy.spend(CONFIG.TOMBOLA_TICKET)) { UI.toast('Not enough energy!', 'red'); return; }
-    S().tombola.entered[r] = true;
-    Social.log('🎟️', `Bought a Tombola ticket (-${CONFIG.TOMBOLA_TICKET}⚡)`);
-    UI.toast('🎟️ Ticket bought! Good luck!', 'green');
-    Store.save(); UI.renderAll();
-  },
-
-  /**
-   * Draw a finished round: pool = players × 3, split among 3 winners, each share × 10.
-   * Example: 10 players -> 30 pool -> 10 each -> ×10 = 100⚡ per winner.
-   */
-  resolve(r) {
-    const st = S();
-    const playerIn = !!st.tombola.entered[r];
-    const bots = this.maxBots(r);
-    const players = bots + (playerIn ? 1 : 0);
-    const pool = players * CONFIG.TOMBOLA_TICKET;
-    const prize = Math.floor(pool / CONFIG.TOMBOLA_WINNERS) * CONFIG.TOMBOLA_MULT;
-
-    // Pick 3 distinct winners; index `bots` represents the player
-    const idx = [...Array(players).keys()];
-    for (let i = idx.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [idx[i], idx[j]] = [idx[j], idx[i]]; }
-    const winners = idx.slice(0, CONFIG.TOMBOLA_WINNERS);
-    const playerWon = playerIn && winners.includes(bots);
-    const names = winners.map(i => (i === bots ? 'YOU' : this.botName(r, i)));
-
-    if (playerWon) {
-      Energy.add(prize, true);    // tombola winnings may exceed the cap
-      UI.toast(`🎉 You WON the Tombola! +${prize}⚡`, 'gold');
-      UI.confetti();
-    }
-    if (playerIn) Social.log(playerWon ? '🎉' : '🎟️', playerWon ? `Won the Tombola: +${prize}⚡` : `Tombola drawn — no luck this time`);
-    delete st.tombola.entered[r];
-    st.tombola.lastResult = { r, players, pool, prize, names, playerIn, playerWon, at: this.roundEnd(r) };
-  },
-
-  /** Called every second (and on load) — draws any rounds that have ended */
-  check(now = Date.now()) {
-    const st = S(); const cur = this.roundId(now);
-    if (st.tombola.lastCheckedRound >= cur) return false;
-    // Resolve rounds the player entered (oldest first), then make sure the
-    // previous round always has a visible result.
-    Object.keys(st.tombola.entered).map(Number).filter(r => r < cur).sort((a, b) => a - b).forEach(r => this.resolve(r));
-    if (!st.tombola.lastResult || st.tombola.lastResult.r < cur - 1) this.resolve(cur - 1);
-    st.tombola.lastCheckedRound = cur;
-    return true;
-  },
-};
-
-/* ================================= UI ================================= */
-const UI = {
-  activeTab: 'slot',
-  selectedStack: null,      // key "id:stars" in the merge bag
-
-  el: id => document.getElementById(id),
-
-  /* ---------- Toasts / effects ---------- */
-  toast(msg, color = 'blue') {
-    const colors = { blue: 'bg-sky-600', green: 'bg-emerald-600', red: 'bg-rose-600', gold: 'bg-amber-500', pink: 'bg-pink-500' };
-    const t = document.createElement('div');
-    t.className = `toast ${colors[color] || colors.blue} text-white font-bold text-sm px-4 py-2 rounded-2xl shadow-lg max-w-sm text-center`;
-    t.textContent = msg;
-    const box = this.el('toasts');
-    box.appendChild(t);
-    while (box.children.length > 4) box.firstChild.remove();   // never flood the screen
-    setTimeout(() => t.remove(), 3000);
-  },
-  confetti() {
-    const colors = ['#facc15', '#f472b6', '#22d3ee', '#a3e635', '#fb923c', '#a855f7'];
-    for (let i = 0; i < 40; i++) {
-      const c = document.createElement('div');
-      c.className = 'confetti';
-      c.style.left = Math.random() * 100 + 'vw';
-      c.style.background = Utils.pick(colors);
-      c.style.animationDelay = Math.random() * 0.5 + 's';
-      c.style.animationDuration = 1.4 + Math.random() + 's';
-      document.body.appendChild(c);
-      setTimeout(() => c.remove(), 2600);
-    }
-  },
-
-  /* ---------- Modal ---------- */
-  showModal(html) {
-    this.el('modalBody').innerHTML = html;
-    const m = this.el('modal'); m.classList.remove('hidden'); m.classList.add('flex');
-    const body = this.el('modalBody'); body.classList.remove('sheet'); void body.offsetWidth; body.classList.add('sheet');
-  },
-  closeModal() { const m = this.el('modal'); m.classList.add('hidden'); m.classList.remove('flex'); },
-
-  /* ---------- Creature card (all tier visuals) ---------- */
-  card(id, stars, { count = 0, locked = false, faded = false, selected = false, attrs = '' } = {}) {
-    const c = CREATURES[id]; const el = DATA.ELEMENTS[c.element];
-    const tier = Math.max(1, stars);
-    const particles = tier >= 5
-      ? Array.from({ length: 7 }, (_, i) => `<span class="pt" style="left:${8 + i * 13}%;animation-delay:${(i * 0.37).toFixed(2)}s"></span>`).join('')
-      : '';
-    return `<div class="ccard tier-${locked ? 1 : tier} ${locked ? 'locked' : ''} ${faded ? 'faded' : ''} ${selected ? 'selected' : ''}" ${attrs}>
-      <div class="ccard-in" style="--c1:${el.c1};--c2:${el.c2}">
-        ${locked ? '' : particles}
-        <div class="elem">${el.icon}</div>
-        ${count > 1 ? `<div class="cnt">x${count}</div>` : ''}
-        <div class="emo">${locked ? '❔' : c.emoji}</div>
-        <div class="nm">${locked ? '???' : c.name}</div>
-        <div class="stars">${locked || !stars ? '&nbsp;' : '★'.repeat(stars)}</div>
-      </div></div>`;
-  },
-
-  /* ---------- Tabs ---------- */
-  switchTab(name) {
-    this.activeTab = name;
-    document.querySelectorAll('[data-tab]').forEach(s => s.classList.toggle('hidden-tab', s.dataset.tab !== name));
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.target === name));
-    window.scrollTo({ top: 0 });
-    this.renderAll();
-  },
-
-  /* ---------- Top bar (called every second) ---------- */
-  renderTop() {
-    const st = S(); const now = Date.now();
-    this.el('goldText').textContent = Utils.fmt(st.gold);
-    this.el('energyText').textContent = `${Utils.fmt(st.energy)} / ${Utils.fmt(CONFIG.MAX_ENERGY)}`;
-    const fill = this.el('energyFill');
-    fill.style.width = Math.min(100, (st.energy / CONFIG.MAX_ENERGY) * 100) + '%';
-    fill.classList.toggle('over', st.energy > CONFIG.MAX_ENERGY);
-    this.el('regenText').textContent = st.energy >= CONFIG.MAX_ENERGY ? 'FULL' : `+${CONFIG.REGEN_AMOUNT} in ${Utils.time(Energy.msToNext(now))}`;
-    // Notification dot: share ready / gift available / tombola not entered
-    const giftReady = st.friends.some(f => now - f.lastSentAt >= CONFIG.GIFT_COOLDOWN_MS);
-    this.el('socialDot').classList.toggle('hidden', !(now >= st.shareReadyAt || giftReady || !Tombola.entered()));
-  },
-
-  /* ---------- Slot tab ---------- */
-  renderSlot() {
-    const st = S();
-    this.el('betBtns').innerHTML = CONFIG.BETS.map(b =>
-      `<button class="btn !py-1 !px-3 text-sm ${st.bet === b ? 'bg-sky-600 text-white' : 'bg-sky-100 text-sky-700'}" data-bet="${b}">x${b}</button>`).join('');
-    this.el('spinCost').textContent = `(-${CONFIG.SPIN_COST * st.bet}⚡)`;
-    this.renderRaidLog();
-  },
-  renderRaidLog() {
-    const raids = S().raids;
-    this.el('raidLog').innerHTML = raids.length
-      ? raids.map(r => `<div class="flex justify-between gap-2 bg-sky-50 rounded-xl px-2 py-1"><span class="truncate">⚔️ ${r.name}${r.capText ? ` · <b class="text-violet-600">${r.capText}</b>` : ''}</span><b class="text-amber-600 whitespace-nowrap">+${Utils.fmt(r.stolen)}🪙</b></div>`).join('')
-      : '<div class="text-slate-400 text-sm">No raids yet — hit ⚔️⚔️⚔️ on the slots!</div>';
-  },
-  setSpinEnabled(on) { this.el('spinBtn').disabled = !on; },
-
-  /** Reel animation: random symbol cycling, reels stop one after another */
-  async animateReels(finalSyms) {
-    const reels = [...document.querySelectorAll('#reels .reel')];
-    reels.forEach(r => { r.classList.remove('stop', 'slot-win'); r.classList.add('spinning'); });
-    const timer = setInterval(() => reels.forEach(r => {
-      if (r.classList.contains('spinning')) r.querySelector('.sym').textContent = Utils.pick(DATA.SLOT_SYMBOLS);
-    }), 70);
-    for (let i = 0; i < reels.length; i++) {
-      await Utils.sleep(i === 0 ? 650 : 330);
-      reels[i].classList.remove('spinning');
-      reels[i].querySelector('.sym').textContent = finalSyms[i];
-      void reels[i].offsetWidth; reels[i].classList.add('stop');
-    }
-    clearInterval(timer);
-    await Utils.sleep(250);
-  },
-  flashReels() { document.querySelectorAll('#reels .reel').forEach(r => { r.classList.remove('slot-win'); void r.offsetWidth; r.classList.add('slot-win'); }); },
-
-  showRaid(opp, stolen, capture) {
-    const petsHtml = opp.pets.map(p => this.card(p.id, p.stars)).join('');
-    this.showModal(`
-      <div class="text-center">
-        <div class="text-xs font-bold text-slate-500">RAIDING</div>
-        <div class="text-xl font-extrabold text-sky-800">🏝️ ${opp.owner}'s ${opp.island}</div>
-        <div class="text-sm text-slate-500">Island treasury: 🪙 ${Utils.fmt(opp.gold)}</div>
-        <div class="grid grid-cols-3 gap-2 my-3">${petsHtml}</div>
-        <div id="raidAnim" class="text-5xl my-2 egg shake">⚔️</div>
-        <div id="raidRes" class="font-bold text-slate-500">Attacking...</div>
-        <button class="btn w-full mt-3 bg-sky-600 text-white" data-close>Collect</button>
-      </div>`);
-    setTimeout(() => {
-      const anim = this.el('raidAnim'); if (!anim) return;
-      anim.classList.remove('shake'); anim.textContent = '💰';
-      anim.classList.add('pop-in');
-      let capHtml = '<div class="text-slate-500 text-sm mt-1">No creature captured this time (5% chance).</div>';
-      if (capture) {
-        const c = CREATURES[capture.id];
-        capHtml = capture.delevel
-          ? `<div class="mt-2 text-violet-700 font-extrabold">🎯 CAPTURED ${c.emoji} ${c.name} ${capture.stars}★!</div>
-             <div class="text-xs text-slate-600">Too powerful for your island (avg ${Collection.averageTier().toFixed(1)}★ / 3★+ rule) — it de-levels into <b>THREE 1★ copies</b>!</div>
-             <div class="grid grid-cols-3 gap-2 mt-2 pop-in">${this.card(capture.id, 1)}${this.card(capture.id, 1)}${this.card(capture.id, 1)}</div>`
-          : `<div class="mt-2 text-violet-700 font-extrabold">🎯 CAPTURED ${c.emoji} ${c.name} ${capture.stars}★!</div>
-             <div class="w-24 mx-auto mt-2 pop-in">${this.card(capture.id, capture.stars)}</div>`;
-        this.confetti();
-      }
-      this.el('raidRes').innerHTML = `<div class="text-2xl font-extrabold text-amber-600">+${Utils.fmt(stolen)} Gold stolen!</div>${capHtml}`;
-    }, 1100);
-  },
-
-  /* ---------- Island tab ---------- */
-  renderIsland() {
-    const st = S();
-    this.el('dexCount').textContent = Object.keys(st.discovered).length;
-    this.el('avgTier').textContent = Collection.averageTier().toFixed(1);
-    this.el('totalCreatures').textContent = Collection.total();
-
-    // Set progress (1★..5★)
-    this.el('setProgress').innerHTML = [1, 2, 3, 4, 5].map(t => {
-      const p = Collection.setProgress(t), done = st.setClaims[t];
-      return `<div class="rounded-xl p-1 text-center ${done ? 'bg-amber-300' : 'bg-sky-50'}">
-        <div class="text-[10px] font-extrabold text-amber-600">${'★'.repeat(t)}</div>
-        <div class="text-xs font-extrabold">${p}/50</div>
-        <div class="text-[9px] text-slate-500">${done ? '✅ claimed' : `+${t * 100}⚡`}</div></div>`;
-    }).join('');
-
-    // Merge bag (stacks)
-    const stacks = Collection.stacks();
-    if (this.selectedStack && !st.inventory[this.selectedStack]) this.selectedStack = null;
-    this.el('bagEmpty').classList.toggle('hidden', stacks.length > 0);
-    this.el('bagGrid').innerHTML = stacks.map(s => {
-      const k = Collection.key(s.id, s.stars);
-      return this.card(s.id, s.stars, { count: s.count, selected: this.selectedStack === k, attrs: `data-stack="${k}"` });
-    }).join('');
-    this.el('mergeHint').innerHTML = this.selectedStack
-      ? (() => { const [id, t] = this.selectedStack.split(':').map(Number); const c = CREATURES[id];
-          return `Selected <b>${c.name} ${t}★</b>. Tap it again to merge → <b>${c.name} ${t + 1}★</b>.`; })()
-      : 'Tap a stack to select it, then tap the same stack again to merge two copies (2 × N★ → 1 × (N+1)★).';
-
-    // Habitats: 50 slots grouped by element biome
-    this.el('habitats').innerHTML = Object.entries(DATA.ELEMENTS).map(([elName, el]) => {
-      const list = CREATURES.filter(c => c.element === elName);
-      const found = list.filter(c => st.discovered[c.id]).length;
-      return `<div class="panel p-3">
-        <div class="flex justify-between items-center mb-2">
-          <div class="font-extrabold" style="color:${el.c2}">${el.icon} ${el.biome}</div>
-          <div class="text-xs font-bold text-slate-500">${found}/10</div>
-        </div>
-        <div class="grid grid-cols-5 gap-2">${list.map(c => {
-          const best = Collection.bestOwned(c.id);
-          const disc = !!st.discovered[c.id];
-          const totalCount = [1, 2, 3, 4, 5].reduce((s, t) => s + Collection.count(c.id, t), 0);
-          return this.card(c.id, best || st.maxStar[c.id] || 1, { locked: !disc, faded: disc && !best, count: totalCount, attrs: `data-dex="${c.id}"` });
-        }).join('')}</div></div>`;
-    }).join('');
-  },
-
-  /** Tap-to-merge interaction for the bag */
-  onStackTap(k) {
-    if (this.selectedStack === k) {
-      const [id, stars] = k.split(':').map(Number);
-      if (Collection.merge(id, stars)) {
-        const c = CREATURES[id];
-        this.toast(`✨ Merged! ${c.emoji} ${c.name} is now ${stars + 1}★`, 'gold');
-        Social.log('✨', `Merged 2× ${c.name} ${stars}★ → ${stars + 1}★`);
-        this.selectedStack = S().inventory[k] >= 2 ? k : null;
-        Store.save();
-        this.renderIsland(); this.renderTop();
-        const newCard = document.querySelector(`[data-stack="${id}:${stars + 1}"]`);
-        if (newCard) newCard.classList.add('merge-flash');
-      }
-    } else {
-      this.selectedStack = k;
-      this.renderIsland();
-    }
-  },
-
-  /** Habitat detail sheet: copies per tier + merge buttons */
-  showDex(id) {
-    const st = S(); const c = CREATURES[id];
-    if (!st.discovered[id]) { this.toast('Not discovered yet — hatch eggs or raid to find it!', 'blue'); return; }
-    const rows = [1, 2, 3, 4, 5].map(t => {
-      const n = Collection.count(id, t);
-      return `<div class="flex items-center gap-2 bg-sky-50 rounded-2xl p-2">
-        <div class="w-16 shrink-0">${this.card(id, t, { faded: !n })}</div>
-        <div class="flex-1"><div class="font-extrabold">${t}★ · owned ${n}</div>
-          <div class="text-[11px] text-slate-500">${['Base look', 'Larger badge', 'Shiny palette', 'Neon glow border', 'Cosmic particles'][t - 1]}</div></div>
-        ${t < 5 ? `<button class="btn text-xs bg-violet-500 text-white" data-dexmerge="${id}:${t}" ${n < 2 ? 'disabled' : ''}>Merge 2→${t + 1}★</button>` : ''}
-      </div>`;
-    }).join('');
-    this.showModal(`
-      <div class="flex justify-between items-center mb-2">
-        <div class="text-xl font-extrabold">${c.emoji} ${c.name}</div>
-        <div class="text-sm font-bold">${DATA.ELEMENTS[c.element].icon} ${c.element}</div>
-      </div>
-      <div class="space-y-2">${rows}</div>
-      <button class="btn w-full mt-3 bg-slate-200 text-slate-700" data-close>Close</button>`);
-  },
-
-  /* ---------- Shop tab ---------- */
-  renderShop() {
-    const st = S();
-    this.el('eggPrice').textContent = CONFIG.EGG_PRICE;
-    this.el('eggsOpened').textContent = st.eggsOpened;
-    this.el('buyEggBtn').disabled = st.gold < CONFIG.EGG_PRICE;
-    this.el('pityBar').innerHTML = Array.from({ length: CONFIG.PITY_THRESHOLD }, (_, i) =>
-      `<span class="w-8 h-3 rounded-full ${i < st.pity ? 'bg-rose-400' : 'bg-slate-200'}"></span>`).join('') +
-      `<span class="w-8 h-3 rounded-full ${st.pity >= CONFIG.PITY_THRESHOLD ? 'bg-amber-400 animate-pulse' : 'bg-slate-200'}"></span>`;
-    this.el('pityText').textContent = st.pity >= CONFIG.PITY_THRESHOLD
-      ? '🌟 Next egg is 100% GUARANTEED to hatch!'
-      : `${st.pity}/${CONFIG.PITY_THRESHOLD} empty in a row · 3 empties = guaranteed hatch`;
-
-    const d = Shop.deals();
-    this.el('dealsGrid').innerHTML = d.items.map((it, i) => {
-      const bought = d.bought.includes(i); const c = CREATURES[it.id];
-      const owned = [1, 2, 3, 4, 5].reduce((s, t) => s + Collection.count(it.id, t), 0);
-      return `<div class="bg-sky-50 rounded-2xl p-2 text-center">
-        ${this.card(it.id, 1, { faded: bought })}
-        <div class="text-[10px] text-slate-500 mt-1">You own: ${owned}</div>
-        <button class="btn w-full mt-1 text-xs !px-1 ${bought ? 'bg-slate-300 text-slate-600' : 'bg-amber-400 text-white'}" data-deal="${i}" ${bought || st.gold < it.price ? 'disabled' : ''}>
-          ${bought ? 'SOLD' : `🪙 ${Utils.fmt(it.price)}`}</button>
-      </div>`;
-    }).join('');
-  },
-
-  showEgg({ hatched, id, guaranteed, free, isNew }) {
-    this.showModal(`
-      <div class="text-center">
-        <div class="font-extrabold text-sky-800">${free ? '🎁 Free Egg from the Slots!' : '🥚 Opening Egg...'}</div>
-        <div id="eggStage" class="my-4"><span class="egg shake">🥚</span></div>
-        <div id="eggRes" class="font-bold text-slate-500 min-h-[48px]">${guaranteed ? '🌟 Pity active — guaranteed hatch!' : 'Crack... crack...'}</div>
-        <div class="flex gap-2 mt-3">
-          <button class="btn flex-1 bg-slate-200 text-slate-700" data-close>Close</button>
-          <button class="btn flex-1 bg-gradient-to-b from-amber-400 to-orange-500 text-white" id="eggAgain">Again · 🪙${CONFIG.EGG_PRICE}</button>
-        </div>
-      </div>`);
-    this.el('eggAgain').disabled = true;
-    setTimeout(() => {
-      const stage = this.el('eggStage'); if (!stage) return;
-      if (hatched) {
-        Collection.add(id, 1);
-        Social.log('🐣', `Hatched ${CREATURES[id].name} 1★${guaranteed ? ' (pity)' : ''}`);
-        stage.innerHTML = `<div class="w-28 mx-auto pop-in">${this.card(id, 1)}</div>`;
-        this.el('eggRes').innerHTML = `<div class="text-xl font-extrabold text-emerald-600">${CREATURES[id].name} hatched!</div>
-          ${isNew ? `<div class="text-sm text-emerald-700">🆕 New species · +${CONFIG.DISCOVERY_ENERGY}⚡</div>` : '<div class="text-sm text-slate-500">Duplicate — great for merging!</div>'}`;
-        this.confetti();
-      } else {
-        Social.log('🥚', 'Egg was empty');
-        stage.innerHTML = `<span class="egg pop-in">🪺</span>`;
-        this.el('eggRes').innerHTML = `<div class="text-xl font-extrabold text-rose-500">Empty egg...</div>
-          <div class="text-sm text-slate-500">${S().pity >= CONFIG.PITY_THRESHOLD ? '🌟 Your NEXT egg is guaranteed!' : `Pity ${S().pity}/${CONFIG.PITY_THRESHOLD}`}</div>`;
-      }
-      const again = this.el('eggAgain'); if (again) again.disabled = S().gold < CONFIG.EGG_PRICE;
-      Store.save(); this.renderAll();
-    }, 1200);
-  },
-
-  /* ---------- Social / Tombola tab ---------- */
-  renderSocial() {
-    const st = S(); const now = Date.now();
-    const cur = Tombola.current(now);
-    this.el('tombolaTimer').textContent = Utils.time(cur.msLeft);
-    this.el('tombolaPlayers').textContent = cur.players;
-    this.el('tombolaPool').textContent = cur.pool + '⚡';
-    this.el('tombolaPrize').textContent = cur.prize + '⚡';
-    const inNow = Tombola.entered(cur.r);
-    const tb = this.el('tombolaBtn');
-    tb.disabled = inNow || st.energy < CONFIG.TOMBOLA_TICKET;
-    tb.textContent = inNow ? '✅ Ticket in — wait for the draw!' : `Buy Ticket · ${CONFIG.TOMBOLA_TICKET}⚡`;
-
-    const bots = Tombola.botsNow(cur.r, now);
-    const chips = [];
-    if (inNow) chips.push('<span class="text-[11px] font-bold bg-fuchsia-500 text-white rounded-full px-2 py-0.5">⭐ YOU</span>');
-    for (let i = bots - 1; i >= Math.max(0, bots - 24); i--) chips.push(`<span class="text-[11px] font-bold bg-white rounded-full px-2 py-0.5 shadow-sm">🎟️ ${Tombola.botName(cur.r, i)}</span>`);
-    this.el('tombolaEntrants').innerHTML = chips.join('');
-
-    const L = st.tombola.lastResult;
-    this.el('tombolaLast').innerHTML = L ? `<div class="bg-white rounded-2xl p-2 shadow-sm">
-        <div class="font-extrabold text-slate-700">Last draw · ${L.players} players · pool ${L.pool}⚡</div>
-        <div class="text-xs text-slate-600">Winners (+${L.prize}⚡ each): ${L.names.map(n => n === 'YOU' ? '<b class="text-fuchsia-600">YOU 🎉</b>' : n).join(', ')}</div>
-        ${L.playerIn && !L.playerWon ? '<div class="text-xs text-slate-400">You were in, but not drawn this time.</div>' : ''}
-      </div>` : '';
-
-    // Share
-    const shareLeft = st.shareReadyAt - now;
-    document.querySelectorAll('.share-btn').forEach(b => b.disabled = shareLeft > 0);
-    this.el('shareTimer').textContent = shareLeft > 0 ? `Next share bonus in ${Utils.time(shareLeft)}` : `✅ Share bonus ready: +${CONFIG.SHARE_ENERGY}⚡`;
-
-    // Friends
-    this.el('friendsList').innerHTML = DATA.FRIENDS.map(f => {
-      const s = st.friends.find(x => x.id === f.id) || { lastSentAt: 0 };
-      const left = CONFIG.GIFT_COOLDOWN_MS - (now - s.lastSentAt);
-      return `<div class="flex items-center gap-2 bg-sky-50 rounded-2xl p-2">
-        <div class="text-2xl w-10 h-10 rounded-full bg-white flex items-center justify-center shadow-sm">${f.avatar}</div>
-        <div class="flex-1"><div class="font-extrabold text-sm">${f.name}</div>
-          <div class="text-[11px] text-slate-500">${left > 0 ? `Next gift in ${Utils.time(left)}` : 'Ready to receive a gift'}</div></div>
-        <button class="btn text-xs ${left > 0 ? 'bg-slate-200 text-slate-500' : 'bg-pink-500 text-white'}" data-gift="${f.id}" ${left > 0 ? 'disabled' : ''}>🎁 Send 10⚡</button>
-      </div>`;
-    }).join('');
-
-    // Log
-    this.el('activityLog').innerHTML = st.log.length
-      ? st.log.map(l => `<div class="flex gap-2"><span class="text-slate-400 text-xs w-11 shrink-0 pt-0.5">${Utils.clock(l.t)}</span><span>${l.icon} ${l.text}</span></div>`).join('')
-      : '<div class="text-slate-400">Nothing yet.</div>';
-  },
-
-  /** Lightweight per-second refresh of timers on the visible tab */
-  tickVisible() {
-    if (this.activeTab === 'social') this.renderSocial();
-    if (this.activeTab === 'shop') this.el('dealsTimer').textContent = Utils.time(Utils.msToMidnight());
-  },
-
-  renderAll() {
-    this.renderTop();
-    if (this.activeTab === 'slot') this.renderSlot();
-    if (this.activeTab === 'island') this.renderIsland();
-    if (this.activeTab === 'shop') { this.renderShop(); this.el('dealsTimer').textContent = Utils.time(Utils.msToMidnight()); }
-    if (this.activeTab === 'social') this.renderSocial();
-  },
-
-  /* ---------- Event wiring (delegated) ---------- */
-  bind() {
-    document.querySelectorAll('.tab-btn').forEach(b => b.addEventListener('click', () => this.switchTab(b.dataset.target)));
-    this.el('topSocialBtn').addEventListener('click', () => this.switchTab('social'));
-    this.el('spinBtn').addEventListener('click', () => Slot.spin());
-    this.el('buyEggBtn').addEventListener('click', () => Shop.buyEgg());
-    this.el('tombolaBtn').addEventListener('click', () => Tombola.buyTicket());
-    this.el('clearSelBtn').addEventListener('click', () => { this.selectedStack = null; this.renderIsland(); });
-    this.el('autoMergeBtn').addEventListener('click', () => {
-      const n = Collection.autoMergeAll();
-      if (n) { this.toast(`✨ Performed ${n} merge${n > 1 ? 's' : ''}!`, 'gold'); Social.log('✨', `Auto-merged ${n} time(s)`); Store.save(); }
-      else this.toast('No identical pairs to merge yet.', 'blue');
-      this.selectedStack = null; this.renderAll();
-    });
-    this.el('resetBtn').addEventListener('click', () => {
-      if (confirm('Reset ALL progress? This cannot be undone.')) { Store.reset(); this.selectedStack = null; this.renderAll(); this.toast('New island, new adventure! 🏝️'); }
-    });
-    document.querySelectorAll('.share-btn').forEach(b => b.addEventListener('click', () => Social.share(b.dataset.platform)));
-
-    // Delegated clicks for dynamic content
-    document.body.addEventListener('click', e => {
-      const t = e.target.closest('[data-bet],[data-stack],[data-dex],[data-deal],[data-gift],[data-close],[data-dexmerge],#eggAgain');
-      if (!t) { if (e.target.id === 'modal') this.closeModal(); return; }
-      if (t.dataset.bet) { if (!Slot.spinning) { S().bet = +t.dataset.bet; Store.save(); this.renderSlot(); } }
-      else if (t.dataset.stack) this.onStackTap(t.dataset.stack);
-      else if (t.dataset.dex) this.showDex(+t.dataset.dex);
-      else if (t.dataset.deal) Shop.buyDeal(+t.dataset.deal);
-      else if (t.dataset.gift) Social.sendGift(t.dataset.gift);
-      else if (t.dataset.dexmerge) {
-        const [id, stars] = t.dataset.dexmerge.split(':').map(Number);
-        if (Collection.merge(id, stars)) { this.toast(`✨ ${CREATURES[id].name} → ${stars + 1}★!`, 'gold'); Social.log('✨', `Merged 2× ${CREATURES[id].name} ${stars}★ → ${stars + 1}★`); Store.save(); this.showDex(id); this.renderAll(); }
-      }
-      else if (t.id === 'eggAgain') { this.closeModal(); Shop.buyEgg(); }
-      else if (t.dataset.close !== undefined) this.closeModal();
-    });
-  },
-};
-
-/* ================================ GAME ================================ */
-const Game = {
-  init() {
-    Store.load();
-    const now = Date.now();
-    // Offline catch-up: regen, gifts and tombola draws that happened while away
-    const before = S().energy;
-    Energy.regen(now);
-    Social.processIncoming(now);
-    Tombola.check(now);
-    const gained = S().energy - before;
-    if (gained > 0 && S().log.length) UI.toast(`Welcome back! +${gained}⚡ while you were away 🌴`, 'green');
-    if (!S().log.length) { Social.log('🏝️', 'Welcome to Pocket Island Master!'); UI.toast('Welcome, Island Master! Spin to start 🎰', 'green'); }
-    Shop.deals();
-    Store.save();
-
-    UI.bind();
-    UI.renderAll();
-
-    // Main loop — once per second
-    let saveCounter = 0;
-    setInterval(() => {
-      const t = Date.now();
-      Energy.regen(t);
-      const giftChanged = Social.processIncoming(t);
-      const drew = Tombola.check(t);
-      if (S().deals.day !== Utils.dayKey()) { Shop.deals(); if (UI.activeTab === 'shop') UI.renderShop(); }
-      UI.renderTop();
-      UI.tickVisible();
-      if (giftChanged || drew) Store.save();
-      if (++saveCounter % 10 === 0) Store.save();
-    }, 1000);
-
-    // Save when leaving / hiding the page
-    document.addEventListener('visibilitychange', () => { if (document.hidden) Store.save(); });
-    window.addEventListener('beforeunload', () => Store.save());
-  },
-};
-
-Game.init();
-</script>
+  <!-- Game scripts (plain scripts, no build step — works on GitHub Pages) -->
+  <script src="config.js"></script>
+  <script src="js/data.js"></script>
+  <script src="js/core.js"></script>
+  <script src="js/island.js"></script>
+  <script src="js/net.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/main.js"></script>
 </body>
 </html>
